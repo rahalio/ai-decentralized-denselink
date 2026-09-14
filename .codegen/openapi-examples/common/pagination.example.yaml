@@ -1,0 +1,98 @@
+openapi: 3.1.0
+info:
+  title: Aipoio - Pagination Components
+  version: 2.0.0
+  description: Canonical cursor-based pagination envelope
+  license:
+    name: Proprietary
+    url: https://ddd-codegen-starter.local/license
+
+servers:
+  - url: https://api.ddd-codegen-starter.local
+    description: Placeholder (components only)
+
+paths: {}
+
+components:
+  schemas:
+    PageMeta:
+      type: object
+      description: Pagination metadata for cursor-based pagination
+      required:
+        - limit
+      properties:
+        nextCursor:
+          type:
+            - string
+            - "null"
+          description: Opaque cursor for the next page of results; null if no more pages
+          example: eyJpZCI6IjEyMyIsInRzIjoxNzA5ODU2MDAwfQ
+        prevCursor:
+          type:
+            - string
+            - "null"
+          description: Opaque cursor for the previous page of results; null if none
+          example: null
+        limit:
+          type: integer
+          minimum: 1
+          maximum: 250
+          default: 50
+          description: Number of items returned in this page
+    PageInfo:
+      type: object
+      description: Pagination information for paginated list responses
+      required:
+        - limit
+      properties:
+        nextCursor:
+          type:
+            - string
+            - "null"
+          description: Opaque cursor for the next page of results; null if no more pages
+          example: eyJpZCI6IjEyMyIsInRzIjoxNzA5ODU2MDAwfQ
+        prevCursor:
+          type:
+            - string
+            - "null"
+          description: Opaque cursor for the previous page of results; null if none
+          example: null
+        limit:
+          type: integer
+          minimum: 1
+          maximum: 250
+          default: 50
+          description: Number of items returned in this page
+    PageResponse:
+      type: object
+      description: "Generic paginated response envelope; override `data.items` via allOf.\nThe `items: false` forces consumers to override with their resource type.\n\nExample usage:\n  allOf:\n    - $ref: \"./common/pagination.yaml#/components/schemas/PageResponse\"\n    - type: object\n      properties:\n        data:\n          type: array\n          items:\n            $ref: \"#/components/schemas/YourItem\"\n      required: [data]\n"
+      required:
+        - data
+        - meta
+      properties:
+        data:
+          type: array
+          items: false
+          description: Array of result items (override items with your resource type)
+          minItems: 0
+        meta:
+          $ref: "#/components/schemas/PageMeta"
+  parameters:
+    cursor:
+      name: cursor
+      in: query
+      description: Cursor token from a previous response (`meta.nextCursor` or `meta.prevCursor`)
+      required: false
+      schema:
+        type: string
+      example: eyJpZCI6IjEyMyIsInRzIjoxNzA5ODU2MDAwfQ
+    limit:
+      name: limit
+      in: query
+      description: Maximum number of items to return
+      required: false
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 250
+        default: 50

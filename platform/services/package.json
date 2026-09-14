@@ -1,0 +1,58 @@
+{
+  "name": "@denselink/services",
+  "version": "0.1.0",
+  "description": "Service layer for DDD Codegen Starter (use cases, ports, shared services)",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./_shared": {
+      "types": "./dist/_shared/index.d.ts",
+      "import": "./dist/_shared/index.js"
+    },
+    "./_shared/index.js": {
+      "types": "./dist/_shared/index.d.ts",
+      "import": "./dist/_shared/index.js"
+    },
+    "./_shared/*": {
+      "types": "./dist/_shared/*.d.ts",
+      "import": "./dist/_shared/*.js"
+    },
+    "./*": {
+      "types": "./dist/*/index.d.ts",
+      "import": "./dist/*/index.js"
+    },
+    "./_shared/ports/*": {
+      "types": "./dist/_shared/ports/*.d.ts",
+      "import": "./dist/_shared/ports/*.js"
+    },
+    "./_shared/ports": {
+      "types": "./dist/_shared/ports/index.d.ts",
+      "import": "./dist/_shared/ports/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsup && tsc --emitDeclarationOnly",
+    "type-check": "tsc --noEmit",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@denselink/core": "workspace:*",
+    "fastify": "^5.1.0",
+    "jsonwebtoken": "^9.0.2"
+  },
+  "devDependencies": {
+    "@types/jsonwebtoken": "^9.0.7",
+    "@types/node": "^22.10.2",
+    "tsup": "^8.0.0",
+    "typescript": "^5.7.2"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

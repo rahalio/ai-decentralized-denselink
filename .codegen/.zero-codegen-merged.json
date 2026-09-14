@@ -1,0 +1,178 @@
+{
+  "domains": [
+    {
+      "name": "identity",
+      "enabled": true,
+      "spec_path": "identity.yaml",
+      "bundled_path": "identity.json",
+      "entity_schema_overrides": null,
+      "operation_aliases": null
+    },
+    {
+      "name": "meshports",
+      "enabled": true,
+      "spec_path": "meshports.yaml",
+      "bundled_path": "meshports.json",
+      "entity_schema_overrides": null,
+      "operation_aliases": null
+    },
+    {
+      "name": "licenses",
+      "enabled": true,
+      "spec_path": "licenses.yaml",
+      "bundled_path": "licenses.json",
+      "entity_schema_overrides": null,
+      "operation_aliases": null
+    },
+    {
+      "name": "density",
+      "enabled": true,
+      "spec_path": "density.yaml",
+      "bundled_path": "density.json",
+      "entity_schema_overrides": null,
+      "operation_aliases": null
+    },
+    {
+      "name": "venues",
+      "enabled": true,
+      "spec_path": "venues.yaml",
+      "bundled_path": "venues.json",
+      "entity_schema_overrides": null,
+      "operation_aliases": null
+    },
+    {
+      "name": "grants",
+      "enabled": true,
+      "spec_path": "grants.yaml",
+      "bundled_path": "grants.json",
+      "entity_schema_overrides": null,
+      "operation_aliases": null
+    },
+    {
+      "name": "telemetry",
+      "enabled": true,
+      "spec_path": "telemetry.yaml",
+      "bundled_path": "telemetry.json",
+      "entity_schema_overrides": null,
+      "operation_aliases": null
+    },
+    {
+      "name": "reports",
+      "enabled": true,
+      "spec_path": "reports.yaml",
+      "bundled_path": "reports.json",
+      "entity_schema_overrides": null,
+      "operation_aliases": null
+    }
+  ],
+  "paths": {
+    "project_root": "/Users/nrahal/@code/xzero/ai-usecase-products/ai-decentralized/ai-decentralized-denselink",
+    "openapi_dir": "/Users/nrahal/@code/xzero/ai-usecase-products/ai-decentralized/ai-decentralized-denselink/packages/openapi-core/src",
+    "bundled_dir": "/Users/nrahal/@code/xzero/ai-usecase-products/ai-decentralized/ai-decentralized-denselink/packages/openapi-core/src/.bundled"
+  },
+  "package_scope": "@denselink",
+  "layers": {
+    "core": {
+      "entities": {
+        "enabled": true,
+        "include_js_docs": true
+      },
+      "types": {
+        "enabled": true,
+        "include_js_docs": true
+      },
+      "repositories": {
+        "enabled": true,
+        "include_js_docs": true
+      }
+    },
+    "services": {
+      "usecases": {
+        "enabled": true,
+        "include_js_docs": true
+      },
+      "ports": {
+        "enabled": true,
+        "include_js_docs": true
+      },
+      "dtos": {
+        "enabled": true,
+        "include_js_docs": true
+      },
+      "policies": {
+        "enabled": true,
+        "include_js_docs": true
+      },
+      "errors": {
+        "enabled": true,
+        "include_js_docs": true
+      },
+      "handlers": {
+        "enabled": true,
+        "include_js_docs": true
+      },
+      "port_style": "method_based"
+    },
+    "api_server": {
+      "routes": {
+        "enabled": true,
+        "include_js_docs": true
+      },
+      "openapi_types": {
+        "enabled": true,
+        "include_js_docs": true
+      },
+      "zod_schemas": {
+        "enabled": true,
+        "include_js_docs": true
+      },
+      "dependencies": {
+        "enabled": true,
+        "include_js_docs": true
+      }
+    },
+    "adapters": {
+      "dynamodb_repositories": {
+        "enabled": true,
+        "include_js_docs": true
+      },
+      "port_adapters": {
+        "enabled": true,
+        "include_js_docs": true
+      }
+    },
+    "tests": {
+      "tests": {
+        "enabled": true,
+        "include_js_docs": true
+      }
+    },
+    "postman": {
+      "collection": {
+        "enabled": true,
+        "include_js_docs": true
+      }
+    },
+    "webapp": {
+      "services": {
+        "enabled": true,
+        "include_js_docs": true
+      },
+      "features": {
+        "enabled": true,
+        "include_js_docs": true
+      }
+    }
+  },
+  "pipeline": {
+    "clean": true,
+    "validate": true,
+    "skip_build": true,
+    "parallel": false,
+    "fail_fast": false,
+    "layers": null
+  },
+  "log_level": "info",
+  "verbose": false,
+  "version": "2.0.0"
+}

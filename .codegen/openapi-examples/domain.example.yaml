@@ -1,0 +1,1726 @@
+openapi: 3.1.0
+info:
+  title: Aipoio - Blockchain Service API
+  version: 0.0.3
+  x-zatca-domain: blockchain
+  x-zatca-domain-prefix: BL # Used for correlation IDs (format: BL_ULID). DO NOT MODIFY.
+  x-maturity: stable
+  x-service-tier: core
+  license:
+    name: Proprietary
+  description: |
+    Blockchain domain for Aipoio.
+
+    Core responsibilities:
+    - Chain registry (L1/L2, namespaces: EVM, Solana, Cosmos, Polkadot, etc.)
+    - Wallet registry (custodial / non-custodial / MPC / hardware)
+    - On-chain transaction registry and reconciliation hooks
+    - Chain adapter configuration (RPC, signer policy, health/monitoring)
+
+    This service is the single source of truth for:
+    - Which chains are supported, in what configuration, and their lifecycle
+    - Which wallets belong to which orgs/accounts and under which compliance regime
+    - What on-chain activity is relevant to Aipoio (for settlements, treasury, risk)
+    - How Aipoio connects to each chain (adapters, priorities, health)
+
+servers:
+  - url: https://api.ddd-codegen-starter.local/v3
+    description: Production API
+  - url: https://api.sandbox.ddd-codegen-starter.local/v3
+    description: Sandbox API
+
+tags:
+  - name: Chains
+    description: Manage blockchain network definitions (system-wide reference data).
+  - name: Wallets
+    description: Manage user and organization-linked blockchain wallets.
+  - name: OnChainTxs
+    description: Track on-chain transactions across supported chains.
+  - name: ChainAdapters
+    description: Manage blockchain network connectors and RPC configurations.
+
+# ---------------------------------------------------------------------------
+# CODEGEN EXTENSION VOCABULARY (see .docs/CODEGEN-EXTENSIONS.md)
+# ---------------------------------------------------------------------------
+# Domain root x-codegen:
+#   api-server.extensions.enabled: true
+#   api-server.extensions.excludeGeneratedRoutes: [productRoutes, syncRoutes]
+#   preserveOnClean: [extensions]
+# Domain x-integration-events: catalog of cross-domain event types (codegen → core registry)
+# Operation x-repository: none — skip port/repo/use-case (action-only endpoints)
+# Operation x-codegen.api-server.handler: extension — implement in domains/{domain}/extensions/
+# Operation x-codegen.api-server.extensionHandler: camelCase export name
+# Operation x-codegen.api-server.responseMerge: integrationEventTypes — merge generated registry in extension
+# Operation x-event-types: [event.type] — documents events emitted by this operation
+
+x-codegen:
+  preserveOnClean:
+    - extensions
+x-integration-events:
+  - type: wallet.created
+    domain: blockchain
+    aggregateType: Wallet
+    description: Wallet registered for organization
+    defaultDeliveryMode: sync
+
+paths:
+  # ---------------------------------------------------------------------------
+  # CHAINS
+  # ---------------------------------------------------------------------------
+  /chains:
+    get:
+      tags: [Chains]
+      summary: List blockchain networks
+      operationId: listChains
+      security:
+        - bearerAuth: []
+        - apiKey: []
+      parameters:
+        - $ref: ./common/pagination.yaml#/components/parameters/cursor
+        - $ref: ./common/pagination.yaml#/components/parameters/limit
+        - name: networkType
+          in: query
+          description: Filter by network type
+          schema:
+            type: string
+            enum: [MAINNET, TESTNET, DEVNET]
+        - name: layer
+          in: query
+          description: Filter by chain layer
+          schema:
+            type: string
+            enum: [L1, L2]
+        - name: status
+          in: query
+          description: Filter by status
+          schema:
+            type: string
+            enum: [ACTIVE, DEPRECATED, DISABLED]
+        - name: chainNamespace
+          in: query
+          description: Filter by blockchain namespace
+          schema:
+            type: string
+            enum: [EVM, COSMOS, SOLANA, POLKADOT]
+      responses:
+        "200":
+          description: Paginated list of blockchain networks
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ListChainsResponse"
+        "400":
+          $ref: ./common/responses.yaml#/components/responses/BadRequest
+        "401":
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        "429":
+          $ref: ./common/responses.yaml#/components/responses/TooManyRequests
+        "500":
+          $ref: ./common/responses.yaml#/components/responses/InternalServerError
+    post:
+      tags: [Chains]
+      summary: Register a new blockchain network
+      operationId: createChain
+      security:
+        - bearerAuth: []
+        - apiKey: []
+      parameters:
+        - $ref: ./common/components.yaml#/components/parameters/idempotencyKey
+      requestBody:
+        $ref: "#/components/requestBodies/CreateChainRequestBody"
+      responses:
+        "201":
+          description: Chain created successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreateChainResponse"
+        "400":
+          $ref: ./common/responses.yaml#/components/responses/BadRequest
+        "401":
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        "409":
+          $ref: ./common/responses.yaml#/components/responses/Conflict
+        "422":
+          $ref: ./common/responses.yaml#/components/responses/ValidationError
+        "429":
+          $ref: ./common/responses.yaml#/components/responses/TooManyRequests
+        "500":
+          $ref: ./common/responses.yaml#/components/responses/InternalServerError
+
+  /chains/{chainId}:
+    get:
+      tags: [Chains]
+      summary: Get blockchain network details
+      operationId: getChain
+      security:
+        - bearerAuth: []
+        - apiKey: []
+      parameters:
+        - name: chainId
+          in: path
+          required: true
+          description: Chain identifier (numeric EVM chainId or namespace-scoped string, e.g. "solana-mainnet")
+          schema:
+            type: string
+            example: "1"
+      responses:
+        "200":
+          description: Chain details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetChainResponse"
+        "400":
+          $ref: ./common/responses.yaml#/components/responses/BadRequest
+        "401":
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        "404":
+          $ref: ./common/responses.yaml#/components/responses/NotFound
+        "500":
+          $ref: ./common/responses.yaml#/components/responses/InternalServerError
+    patch:
+      tags: [Chains]
+      summary: Update blockchain network configuration
+      operationId: updateChain
+      security:
+        - bearerAuth: []
+        - apiKey: []
+      parameters:
+        - name: chainId
+          in: path
+          required: true
+          schema:
+            type: string
+            example: "1"
+        - $ref: ./common/components.yaml#/components/parameters/idempotencyKey
+      requestBody:
+        $ref: "#/components/requestBodies/UpdateChainRequestBody"
+      responses:
+        "200":
+          description: Updated chain
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UpdateChainResponse"
+        "400":
+          $ref: ./common/responses.yaml#/components/responses/BadRequest
+        "401":
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        "404":
+          $ref: ./common/responses.yaml#/components/responses/NotFound
+        "422":
+          $ref: ./common/responses.yaml#/components/responses/ValidationError
+        "429":
+          $ref: ./common/responses.yaml#/components/responses/TooManyRequests
+        "500":
+          $ref: ./common/responses.yaml#/components/responses/InternalServerError
+
+  # ---------------------------------------------------------------------------
+  # WALLETS
+  # ---------------------------------------------------------------------------
+  /orgs/{orgId}/wallets:
+    get:
+      tags: [Wallets]
+      summary: List organization wallets
+      operationId: listWallets
+      security:
+        - bearerAuth: []
+        - apiKey: []
+      parameters:
+        - $ref: ./common/components.yaml#/components/parameters/orgId
+        - $ref: ./common/components.yaml#/components/parameters/orgIdHeader
+        - $ref: ./common/pagination.yaml#/components/parameters/cursor
+        - $ref: ./common/pagination.yaml#/components/parameters/limit
+        - name: status
+          in: query
+          description: Filter by wallet status
+          schema:
+            type: string
+            enum: [ACTIVE, DISABLED, ARCHIVED]
+        - name: type
+          in: query
+          description: Filter by wallet type
+          schema:
+            type: string
+            enum: [CUSTODIAL, NON_CUSTODIAL, MPC, HARDWARE]
+        - name: chainNamespace
+          in: query
+          description: Filter by blockchain namespace
+          schema:
+            type: string
+            enum: [EVM, COSMOS, SOLANA, POLKADOT]
+        - name: chainId
+          in: query
+          description: Filter by chain ID
+          schema:
+            type: integer
+        - name: ownerAccountId
+          in: query
+          description: Filter by owner account
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Paginated list of wallets
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ListWalletsResponse"
+        "400":
+          $ref: ./common/responses.yaml#/components/responses/BadRequest
+        "401":
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        "429":
+          $ref: ./common/responses.yaml#/components/responses/TooManyRequests
+        "500":
+          $ref: ./common/responses.yaml#/components/responses/InternalServerError
+    post:
+      tags: [Wallets]
+      summary: Register wallet for organization
+      operationId: createWallet
+      x-event-types:
+        - wallet.created
+        - wallet.kyc.required
+      security:
+        - bearerAuth: []
+        - apiKey: []
+      parameters:
+        - $ref: ./common/components.yaml#/components/parameters/orgId
+        - $ref: ./common/components.yaml#/components/parameters/orgIdHeader
+        - $ref: ./common/components.yaml#/components/parameters/idempotencyKey
+      requestBody:
+        $ref: "#/components/requestBodies/CreateWalletRequestBody"
+      responses:
+        "201":
+          description: Wallet created successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreateWalletResponse"
+        "400":
+          $ref: ./common/responses.yaml#/components/responses/BadRequest
+        "401":
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        "409":
+          $ref: ./common/responses.yaml#/components/responses/Conflict
+        "422":
+          $ref: ./common/responses.yaml#/components/responses/ValidationError
+        "429":
+          $ref: ./common/responses.yaml#/components/responses/TooManyRequests
+        "500":
+          $ref: ./common/responses.yaml#/components/responses/InternalServerError
+
+  /orgs/{orgId}/wallets/{walletId}:
+    get:
+      tags: [Wallets]
+      summary: Get wallet details
+      operationId: getWallet
+      security:
+        - bearerAuth: []
+        - apiKey: []
+      parameters:
+        - $ref: ./common/components.yaml#/components/parameters/orgId
+        - $ref: ./common/components.yaml#/components/parameters/orgIdHeader
+        - name: walletId
+          in: path
+          required: true
+          schema:
+            $ref: "#/components/schemas/WalletId"
+      responses:
+        "200":
+          description: Wallet details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetWalletResponse"
+        "400":
+          $ref: ./common/responses.yaml#/components/responses/BadRequest
+        "401":
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        "404":
+          $ref: ./common/responses.yaml#/components/responses/NotFound
+        "500":
+          $ref: ./common/responses.yaml#/components/responses/InternalServerError
+    patch:
+      tags: [Wallets]
+      summary: Update wallet metadata
+      operationId: updateWallet
+      security:
+        - bearerAuth: []
+        - apiKey: []
+      parameters:
+        - $ref: ./common/components.yaml#/components/parameters/orgId
+        - $ref: ./common/components.yaml#/components/parameters/orgIdHeader
+        - name: walletId
+          in: path
+          required: true
+          schema:
+            $ref: "#/components/schemas/WalletId"
+        - $ref: ./common/components.yaml#/components/parameters/idempotencyKey
+      requestBody:
+        $ref: "#/components/requestBodies/UpdateWalletRequestBody"
+      responses:
+        "200":
+          description: Updated wallet
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UpdateWalletResponse"
+        "400":
+          $ref: ./common/responses.yaml#/components/responses/BadRequest
+        "401":
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        "404":
+          $ref: ./common/responses.yaml#/components/responses/NotFound
+        "422":
+          $ref: ./common/responses.yaml#/components/responses/ValidationError
+        "429":
+          $ref: ./common/responses.yaml#/components/responses/TooManyRequests
+        "500":
+          $ref: ./common/responses.yaml#/components/responses/InternalServerError
+
+  /orgs/{orgId}/wallet-balances/{walletId}:
+    get:
+      tags: [Wallets]
+      summary: Get current wallet balances (by asset)
+      operationId: getWalletBalance
+      security:
+        - bearerAuth: []
+        - apiKey: []
+      parameters:
+        - $ref: ./common/components.yaml#/components/parameters/orgId
+        - $ref: ./common/components.yaml#/components/parameters/orgIdHeader
+        - name: walletId
+          in: path
+          required: true
+          schema:
+            $ref: "#/components/schemas/WalletId"
+        - name: includeFiat
+          in: query
+          description: Include fiat valuation snapshot
+          schema:
+            type: boolean
+            default: true
+      responses:
+        "200":
+          description: Wallet balances
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetWalletBalanceResponse"
+        "400":
+          $ref: ./common/responses.yaml#/components/responses/BadRequest
+        "401":
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        "404":
+          $ref: ./common/responses.yaml#/components/responses/NotFound
+        "500":
+          $ref: ./common/responses.yaml#/components/responses/InternalServerError
+
+  # ---------------------------------------------------------------------------
+  # ON-CHAIN TRANSACTIONS
+  # ---------------------------------------------------------------------------
+  /orgs/{orgId}/onchain/txs:
+    get:
+      tags: [OnChainTxs]
+      summary: List on-chain transactions
+      operationId: listOnChainTxs
+      security:
+        - bearerAuth: []
+        - apiKey: []
+      parameters:
+        - $ref: ./common/components.yaml#/components/parameters/orgId
+        - $ref: ./common/components.yaml#/components/parameters/orgIdHeader
+        - $ref: ./common/pagination.yaml#/components/parameters/cursor
+        - $ref: ./common/pagination.yaml#/components/parameters/limit
+        - name: chainNamespace
+          in: query
+          description: Filter by blockchain namespace
+          schema:
+            type: string
+            enum: [EVM, COSMOS, SOLANA, POLKADOT]
+        - name: chainId
+          in: query
+          description: Filter by chain ID
+          schema:
+            type: integer
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [PENDING, CONFIRMED, FAILED]
+        - name: hash
+          in: query
+          description: Filter by transaction hash
+          schema:
+            type: string
+        - name: fromAddress
+          in: query
+          description: Filter by sender address
+          schema:
+            type: string
+        - name: toAddress
+          in: query
+          description: Filter by recipient address
+          schema:
+            type: string
+        - name: direction
+          in: query
+          description: Filter by transaction direction
+          schema:
+            type: string
+            enum: [INBOUND, OUTBOUND]
+        - name: finalized
+          in: query
+          description: Filter by finality status
+          schema:
+            type: boolean
+        - name: sort
+          in: query
+          description: Sort order (e.g., -blockTime for descending)
+          schema:
+            type: string
+        - name: refType
+          in: query
+          description: Filter by reference entity type (e.g., SETTLEMENT, WITHDRAWAL)
+          schema:
+            type: string
+        - name: refId
+          in: query
+          description: Filter by reference entity ID
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Paginated list of on-chain transactions
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ListOnChainTxsResponse"
+        "400":
+          $ref: ./common/responses.yaml#/components/responses/BadRequest
+        "401":
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        "429":
+          $ref: ./common/responses.yaml#/components/responses/TooManyRequests
+        "500":
+          $ref: ./common/responses.yaml#/components/responses/InternalServerError
+
+    post:
+      tags: [OnChainTxs]
+      summary: Register new on-chain transaction
+      operationId: createOnChainTx
+      x-event-types:
+        - on-chain-tx.confirmed
+        - on-chain-tx.failed
+        - on-chain-tx.reconciled
+      security:
+        - bearerAuth: []
+        - apiKey: []
+      parameters:
+        - $ref: ./common/components.yaml#/components/parameters/orgId
+        - $ref: ./common/components.yaml#/components/parameters/orgIdHeader
+        - $ref: ./common/components.yaml#/components/parameters/idempotencyKey
+      requestBody:
+        $ref: "#/components/requestBodies/CreateOnChainTxRequestBody"
+      responses:
+        "201":
+          description: On-chain transaction created successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreateOnChainTxResponse"
+        "400":
+          $ref: ./common/responses.yaml#/components/responses/BadRequest
+        "401":
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        "422":
+          $ref: ./common/responses.yaml#/components/responses/ValidationError
+        "429":
+          $ref: ./common/responses.yaml#/components/responses/TooManyRequests
+        "500":
+          $ref: ./common/responses.yaml#/components/responses/InternalServerError
+
+  /orgs/{orgId}/onchain/txs/{onChainTxId}:
+    get:
+      tags: [OnChainTxs]
+      summary: Get on-chain transaction details
+      operationId: getOnChainTx
+      security:
+        - bearerAuth: []
+        - apiKey: []
+      parameters:
+        - $ref: ./common/components.yaml#/components/parameters/orgId
+        - $ref: ./common/components.yaml#/components/parameters/orgIdHeader
+        - name: onChainTxId
+          in: path
+          required: true
+          schema:
+            $ref: "#/components/schemas/OnChainTxId"
+      responses:
+        "200":
+          description: On-chain transaction details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetOnChainTxResponse"
+        "400":
+          $ref: ./common/responses.yaml#/components/responses/BadRequest
+        "401":
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        "404":
+          $ref: ./common/responses.yaml#/components/responses/NotFound
+        "500":
+          $ref: ./common/responses.yaml#/components/responses/InternalServerError
+
+  # ---------------------------------------------------------------------------
+  # CHAIN ADAPTERS & HEALTH
+  # ---------------------------------------------------------------------------
+  /chain-adapters:
+    get:
+      tags: [ChainAdapters]
+      summary: List chain adapters
+      operationId: listChainAdapters
+      security:
+        - bearerAuth: []
+        - apiKey: []
+      parameters:
+        - $ref: ./common/pagination.yaml#/components/parameters/cursor
+        - $ref: ./common/pagination.yaml#/components/parameters/limit
+        - name: chainId
+          in: query
+          description: Filter chain adapters by chainId
+          schema:
+            type: integer
+        - name: status
+          in: query
+          description: Filter by chain adapter status
+          schema:
+            type: string
+            enum: [ACTIVE, DISABLED, MAINTENANCE]
+        - name: signerPolicy
+          in: query
+          description: Filter by signer policy
+          schema:
+            type: string
+            enum: [LOCAL_SIGNER, MPC_CLUSTER, HSM, FIREBLOCKS, CUSTODY_PROVIDER]
+      responses:
+        "200":
+          description: Paginated list of chain adapters
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ListChainAdaptersResponse"
+        "400":
+          $ref: ./common/responses.yaml#/components/responses/BadRequest
+        "401":
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        "429":
+          $ref: ./common/responses.yaml#/components/responses/TooManyRequests
+        "500":
+          $ref: ./common/responses.yaml#/components/responses/InternalServerError
+
+    post:
+      tags: [ChainAdapters]
+      summary: Register chain adapter
+      operationId: createChainAdapter
+      security:
+        - bearerAuth: []
+        - apiKey: []
+      parameters:
+        - $ref: ./common/components.yaml#/components/parameters/idempotencyKey
+      requestBody:
+        $ref: "#/components/requestBodies/CreateChainAdapterRequestBody"
+      responses:
+        "201":
+          description: Chain adapter created successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreateChainAdapterResponse"
+        "400":
+          $ref: ./common/responses.yaml#/components/responses/BadRequest
+        "401":
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        "409":
+          $ref: ./common/responses.yaml#/components/responses/Conflict
+        "422":
+          $ref: ./common/responses.yaml#/components/responses/ValidationError
+        "429":
+          $ref: ./common/responses.yaml#/components/responses/TooManyRequests
+        "500":
+          $ref: ./common/responses.yaml#/components/responses/InternalServerError
+
+  /chain-adapters/{chainAdapterId}:
+    get:
+      tags: [ChainAdapters]
+      summary: Get chain adapter details
+      operationId: getChainAdapter
+      security:
+        - bearerAuth: []
+        - apiKey: []
+      parameters:
+        - name: chainAdapterId
+          in: path
+          required: true
+          schema:
+            $ref: "#/components/schemas/ChainAdapterId"
+      responses:
+        "200":
+          description: Chain adapter details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetChainAdapterResponse"
+        "401":
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        "404":
+          $ref: ./common/responses.yaml#/components/responses/NotFound
+        "500":
+          $ref: ./common/responses.yaml#/components/responses/InternalServerError
+
+    patch:
+      tags: [ChainAdapters]
+      summary: Update chain adapter configuration
+      operationId: updateChainAdapter
+      security:
+        - bearerAuth: []
+        - apiKey: []
+      parameters:
+        - name: chainAdapterId
+          in: path
+          required: true
+          schema:
+            $ref: "#/components/schemas/ChainAdapterId"
+        - $ref: ./common/components.yaml#/components/parameters/idempotencyKey
+      requestBody:
+        $ref: "#/components/requestBodies/UpdateChainAdapterRequestBody"
+      responses:
+        "200":
+          description: Updated chain adapter
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UpdateChainAdapterResponse"
+        "400":
+          $ref: ./common/responses.yaml#/components/responses/BadRequest
+        "401":
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        "404":
+          $ref: ./common/responses.yaml#/components/responses/NotFound
+        "422":
+          $ref: ./common/responses.yaml#/components/responses/ValidationError
+        "429":
+          $ref: ./common/responses.yaml#/components/responses/TooManyRequests
+        "500":
+          $ref: ./common/responses.yaml#/components/responses/InternalServerError
+
+  /chain-adapter-healths/{chainAdapterId}:
+    get:
+      tags: [ChainAdapters]
+      summary: Check chain adapter health status
+      operationId: getChainAdapterHealth
+      x-repository: none
+      x-event-types:
+        - chain-adapter.health.degraded
+        - chain-adapter.health.recovered
+      security:
+        - bearerAuth: []
+        - apiKey: []
+      parameters:
+        - name: chainAdapterId
+          in: path
+          required: true
+          schema:
+            $ref: "#/components/schemas/ChainAdapterId"
+      responses:
+        "200":
+          description: Chain adapter health metrics
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetHealthMetricsResponse"
+        "401":
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        "404":
+          $ref: ./common/responses.yaml#/components/responses/NotFound
+        "500":
+          $ref: ./common/responses.yaml#/components/responses/InternalServerError
+
+  /health/chains:
+    get:
+      tags: [ChainAdapters]
+      summary: Overall chain service health
+      operationId: getChainServiceHealth
+      x-repository: none
+      x-handler-type: computed
+      description: |
+        Returns aggregated health status across all chain adapters.
+        This is a computed/derived endpoint with no backing entity.
+      security:
+        - bearerAuth: []
+        - apiKey: []
+      responses:
+        "200":
+          description: Service health summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetChainServiceHealthResponse"
+        "401":
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        "500":
+          $ref: ./common/responses.yaml#/components/responses/InternalServerError
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT access token in Authorization header
+    oauth2:
+      $ref: ./common/components.yaml#/components/securitySchemes/oauth2
+      x-scopes:
+        read:chain: Read access to chain data
+        write:chain: Write access to chain resources
+        chain.audit: Access audit logs
+        wallet.write: Create and update wallets
+        wallet.read: Read wallet information
+    apiKey:
+      $ref: ./common/components.yaml#/components/securitySchemes/apiKey
+
+  requestBodies:
+    CreateChainRequestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/CreateChainRequest"
+
+    UpdateChainRequestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/UpdateChainRequest"
+
+    CreateWalletRequestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/CreateWalletRequest"
+
+    UpdateWalletRequestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/UpdateWalletRequest"
+
+    CreateOnChainTxRequestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/CreateOnChainTxRequest"
+
+    CreateChainAdapterRequestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/CreateChainAdapterRequest"
+
+    UpdateChainAdapterRequestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/UpdateChainAdapterRequest"
+
+  schemas:
+    #Requests
+    CreateChainRequest:
+      allOf:
+        - $ref: "#/components/schemas/Chain"
+        - type: object
+          description: Input for creating a new blockchain network
+
+    UpdateChainRequest:
+      allOf:
+        - $ref: "#/components/schemas/Chain"
+        - type: object
+          description: Input for updating blockchain network configuration
+          minProperties: 1
+
+    CreateWalletRequest:
+      allOf:
+        - $ref: "#/components/schemas/Wallet"
+        - type: object
+          description: Input for creating a new wallet
+
+    UpdateWalletRequest:
+      allOf:
+        - $ref: "#/components/schemas/Wallet"
+        - type: object
+          description: Input for updating an existing wallet
+          minProperties: 1
+
+    CreateOnChainTxRequest:
+      allOf:
+        - $ref: "#/components/schemas/OnChainTx"
+        - type: object
+          description: Input for recording a new on-chain transaction
+
+    CreateChainAdapterRequest:
+      allOf:
+        - $ref: "#/components/schemas/ChainAdapter"
+        - type: object
+          description: Input for registering a blockchain adapter
+
+    UpdateChainAdapterRequest:
+      allOf:
+        - $ref: "#/components/schemas/ChainAdapter"
+        - type: object
+          description: Input for updating adapter configuration
+          minProperties: 1
+
+    # Responses
+    ListChainsResponse:
+      type: object
+      required:
+        - data
+        - meta
+      properties:
+        data:
+          type: object
+          required:
+            - items
+          properties:
+            items:
+              type: array
+              items:
+                $ref: "#/components/schemas/Chain"
+        meta:
+          allOf:
+            - $ref: ./common/responses.yaml#/components/schemas/ResponseMeta
+            - type: object
+              required:
+                - pagination
+              properties:
+                pagination:
+                  $ref: ./common/pagination.yaml#/components/schemas/PageInfo
+
+    CreateChainResponse:
+      allOf:
+        - $ref: ./common/responses.yaml#/components/schemas/DataEnvelope
+        - type: object
+          properties:
+            data:
+              $ref: "#/components/schemas/Chain"
+
+    GetChainResponse:
+      allOf:
+        - $ref: ./common/responses.yaml#/components/schemas/DataEnvelope
+        - type: object
+          properties:
+            data:
+              $ref: "#/components/schemas/Chain"
+
+    UpdateChainResponse:
+      allOf:
+        - $ref: ./common/responses.yaml#/components/schemas/DataEnvelope
+        - type: object
+          properties:
+            data:
+              $ref: "#/components/schemas/Chain"
+
+    ListWalletsResponse:
+      type: object
+      required:
+        - data
+        - meta
+      properties:
+        data:
+          type: object
+          required:
+            - items
+          properties:
+            items:
+              type: array
+              items:
+                $ref: "#/components/schemas/Wallet"
+        meta:
+          allOf:
+            - $ref: ./common/responses.yaml#/components/schemas/ResponseMeta
+            - type: object
+              required:
+                - pagination
+              properties:
+                pagination:
+                  $ref: ./common/pagination.yaml#/components/schemas/PageInfo
+
+    CreateWalletResponse:
+      allOf:
+        - $ref: ./common/responses.yaml#/components/schemas/DataEnvelope
+        - type: object
+          properties:
+            data:
+              $ref: "#/components/schemas/Wallet"
+
+    GetWalletResponse:
+      allOf:
+        - $ref: ./common/responses.yaml#/components/schemas/DataEnvelope
+        - type: object
+          properties:
+            data:
+              $ref: "#/components/schemas/Wallet"
+
+    UpdateWalletResponse:
+      allOf:
+        - $ref: ./common/responses.yaml#/components/schemas/DataEnvelope
+        - type: object
+          properties:
+            data:
+              $ref: "#/components/schemas/Wallet"
+
+    GetWalletBalanceResponse:
+      allOf:
+        - $ref: ./common/responses.yaml#/components/schemas/DataEnvelope
+        - type: object
+          properties:
+            data:
+              type: array
+              items:
+                $ref: "#/components/schemas/WalletBalance"
+
+    ListWalletBalancesResponse:
+      allOf:
+        - $ref: ./common/responses.yaml#/components/schemas/DataEnvelope
+        - type: object
+          properties:
+            data:
+              type: object
+              required: [items]
+              properties:
+                items:
+                  type: array
+                  items:
+                    $ref: "#/components/schemas/WalletBalance"
+
+    ListOnChainTxsResponse:
+      type: object
+      required:
+        - data
+        - meta
+      properties:
+        data:
+          type: object
+          required:
+            - items
+          properties:
+            items:
+              type: array
+              items:
+                $ref: "#/components/schemas/OnChainTx"
+        meta:
+          allOf:
+            - $ref: ./common/responses.yaml#/components/schemas/ResponseMeta
+            - type: object
+              required:
+                - pagination
+              properties:
+                pagination:
+                  $ref: ./common/pagination.yaml#/components/schemas/PageInfo
+
+    CreateOnChainTxResponse:
+      allOf:
+        - $ref: ./common/responses.yaml#/components/schemas/DataEnvelope
+        - type: object
+          properties:
+            data:
+              $ref: "#/components/schemas/OnChainTx"
+
+    GetOnChainTxResponse:
+      allOf:
+        - $ref: ./common/responses.yaml#/components/schemas/DataEnvelope
+        - type: object
+          properties:
+            data:
+              $ref: "#/components/schemas/OnChainTx"
+
+    ListChainAdaptersResponse:
+      type: object
+      required:
+        - data
+        - meta
+      properties:
+        data:
+          type: object
+          required:
+            - items
+          properties:
+            items:
+              type: array
+              items:
+                $ref: "#/components/schemas/ChainAdapter"
+        meta:
+          allOf:
+            - $ref: ./common/responses.yaml#/components/schemas/ResponseMeta
+            - type: object
+              required:
+                - pagination
+              properties:
+                pagination:
+                  $ref: ./common/pagination.yaml#/components/schemas/PageInfo
+
+    CreateChainAdapterResponse:
+      allOf:
+        - $ref: ./common/responses.yaml#/components/schemas/DataEnvelope
+        - type: object
+          properties:
+            data:
+              $ref: "#/components/schemas/ChainAdapter"
+
+    GetChainAdapterResponse:
+      allOf:
+        - $ref: ./common/responses.yaml#/components/schemas/DataEnvelope
+        - type: object
+          properties:
+            data:
+              $ref: "#/components/schemas/ChainAdapter"
+
+    UpdateChainAdapterResponse:
+      allOf:
+        - $ref: ./common/responses.yaml#/components/schemas/DataEnvelope
+        - type: object
+          properties:
+            data:
+              $ref: "#/components/schemas/ChainAdapter"
+
+    GetHealthMetricsResponse:
+      allOf:
+        - $ref: ./common/responses.yaml#/components/schemas/DataEnvelope
+        - type: object
+          properties:
+            data:
+              $ref: "#/components/schemas/HealthMetrics"
+
+    GetChainServiceHealthResponse:
+      allOf:
+        - $ref: ./common/responses.yaml#/components/schemas/DataEnvelope
+        - type: object
+          properties:
+            data:
+              $ref: "#/components/schemas/ChainServiceHealth"
+
+    # Entities
+
+    Chain:
+      type: object
+      description: Master registry of blockchain networks (system-wide reference data).
+      required:
+        - id
+        - chainId
+        - name
+        - shortName
+        - networkType
+        - layer
+        - nativeCurrency
+        - chainNamespace
+        - status
+      properties:
+        id:
+          $ref: "#/components/schemas/ChainRecordId"
+        chainId:
+          type: string
+          description: Chain identifier (numeric EVM chainId or namespace-scoped string, e.g. "solana-mainnet")
+          example: "1"
+        name:
+          type: string
+          description: Human-readable chain name
+          example: Ethereum Mainnet
+        shortName:
+          type: string
+          description: Short identifier
+          example: ETH
+        networkType:
+          type: string
+          enum: [MAINNET, TESTNET, DEVNET]
+          example: MAINNET
+        layer:
+          type: string
+          enum: [L1, L2]
+          description: Layer 1 or Layer 2
+          example: L1
+        nativeCurrency:
+          type: string
+          description: Native token symbol
+          example: ETH
+        decimals:
+          type: integer
+          description: Native currency decimals
+          example: 18
+          default: 18
+        blockTime:
+          type: integer
+          description: Average block time in seconds
+          example: 12
+        confirmations:
+          type: integer
+          description: Required confirmations for finality
+          example: 12
+          default: 12
+        explorerUrl:
+          type: string
+          format: uri
+          description: Block explorer URL
+          example: "https://etherscan.io"
+        docsUrl:
+          type: string
+          format: uri
+          description: Official documentation URL
+          example: "https://ethereum.org/en/developers/docs/"
+        iconUrl:
+          type: string
+          format: uri
+          description: Chain icon/logo URL
+        genesisHash:
+          type: string
+          description: Genesis block hash for chain fingerprinting and integrity validation
+          example: "0xd4e56740f876aef8c010b86a40d5f56745a118d0906a34e69aec8c0db1cb8fa3"
+        chainNamespace:
+          type: string
+          enum: [EVM, COSMOS, SOLANA, POLKADOT]
+          description: Blockchain namespace for multi-chain support
+          example: EVM
+          default: EVM
+        rpcFeatures:
+          type: object
+          description: RPC capability hints for clients
+          properties:
+            EIP1559:
+              type: boolean
+              example: true
+            PRIORITY_FEE:
+              type: boolean
+              example: true
+        status:
+          type: string
+          enum: [ACTIVE, DEPRECATED, DISABLED]
+          example: ACTIVE
+        deprecationReason:
+          type: string
+          description: Explanation for deprecation
+          example: Migrated to Proof-of-Stake
+        replacedByChainId:
+          type: integer
+          description: Chain ID that replaces this deprecated chain
+          example: 1
+        replacedByNamespace:
+          type: string
+          description: Namespace of replacement chain (if different)
+          enum: [EVM, COSMOS, SOLANA, POLKADOT]
+        createdBy:
+          type: string
+          description: Service or user that created this chain
+        updatedBy:
+          type: string
+          description: Service or user that last updated this chain
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    ChainAdapter:
+      type: object
+      description: Blockchain network adapter configuration (RPC connection details).
+      required:
+        - id
+        - chainId
+        - name
+        - rpcEndpoint
+        - signerPolicy
+        - status
+      properties:
+        id:
+          $ref: "#/components/schemas/ChainAdapterId"
+        chainId:
+          type: string
+          description: Reference to Chain.chainId
+          example: "1"
+        name:
+          type: string
+          description: Adapter identifier
+          example: Alchemy Primary
+        rpcEndpoint:
+          type: string
+          format: uri
+          description: HTTP RPC endpoint URL
+          example: "https://eth-mainnet.g.alchemy.com/v2/YOUR_API_KEY"
+        wsEndpoint:
+          type: string
+          format: uri
+          description: WebSocket endpoint URL (optional)
+          example: "wss://eth-mainnet.g.alchemy.com/v2/YOUR_API_KEY"
+        signerPolicy:
+          type: string
+          enum: [LOCAL_SIGNER, MPC_CLUSTER, HSM, FIREBLOCKS, CUSTODY_PROVIDER]
+          description: Transaction signing strategy
+          example: MPC_CLUSTER
+        priority:
+          type: integer
+          description: Adapter priority (0 = primary, higher = fallback)
+          example: 0
+          default: 0
+        fallbackAdapterIds:
+          type: array
+          description: Ordered list of fallback adapter IDs
+          items:
+            $ref: "#/components/schemas/ChainAdapterId"
+        status:
+          type: string
+          enum: [ACTIVE, DISABLED, MAINTENANCE]
+          example: ACTIVE
+        lastHealthCheck:
+          type: string
+          format: date-time
+          description: Last health check timestamp
+        healthStatus:
+          type: object
+          description: Health check metrics
+          properties:
+            latency:
+              type: integer
+              description: Response latency in ms
+              example: 50
+            blockHeight:
+              type: integer
+              description: Current block height
+              example: 15000000
+            synced:
+              type: boolean
+              description: Is node fully synced
+              example: true
+        createdBy:
+          type: string
+          description: Service or user that created this adapter
+        updatedBy:
+          type: string
+          description: Service or user that last updated this adapter
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    ChainRecordId:
+      type: string
+      description: Chain registry record identifier (prefixed ULID)
+      pattern: "^BL_[0-9A-HJKMNPQRSTVWXYZ]{26}$"
+      example: "BL_01HQZX3K8PQRS7VN6M9TW1ABJZ"
+
+    ChainAdapterId:
+      type: string
+      description: Chain adapter identifier (prefixed ULID)
+      pattern: "^BL_[0-9A-HJKMNPQRSTVWXYZ]{26}$"
+      example: "BL_01HQZX3K8PQRS7VN6M9TW1ABJZ"
+
+    ChainServiceHealth:
+      type: object
+      x-entity: false
+      x-computed: true
+      description: |
+        Overall chain service health summary (computed/derived, not stored).
+        Aggregates real-time health status across all chain adapters.
+      required:
+        - status
+        - adaptersHealthy
+      properties:
+        status:
+          type: string
+          enum: [HEALTHY, DEGRADED, DOWN]
+          example: HEALTHY
+        adaptersHealthy:
+          type: integer
+          example: 8
+        adaptersDegraded:
+          type: integer
+          example: 1
+        adaptersDown:
+          type: integer
+          example: 0
+        chains:
+          type: array
+          items:
+            type: object
+            properties:
+              chainId:
+                type: integer
+              name:
+                type: string
+              status:
+                type: string
+                enum: [HEALTHY, DEGRADED, DOWN]
+        timestamp:
+          type: string
+          format: date-time
+
+    OnChainTxId:
+      type: string
+      description: On-chain transaction identifier (prefixed ULID)
+      pattern: "^BL_[0-9A-HJKMNPQRSTVWXYZ]{26}$"
+      example: "BL_01HQZX3K8PQRS7VN6M9TW1ABJZ"
+
+    OnChainTx:
+      type: object
+      description: On-chain transaction record with full metadata.
+      required:
+        - id
+        - orgId
+        - chainNamespace
+        - hash
+        - status
+      properties:
+        id:
+          $ref: "#/components/schemas/OnChainTxId"
+        orgId:
+          $ref: ./common/primitives.yaml#/components/schemas/OrgId
+        chainNamespace:
+          type: string
+          enum: [EVM, COSMOS, SOLANA, POLKADOT]
+          description: Blockchain namespace
+          example: EVM
+        chainId:
+          type: string
+          description: Reference to Chain.chainId or namespace-scoped identifier
+          example: "1"
+        hash:
+          type: string
+          description: Transaction hash (format varies by namespace)
+          example: "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef"
+        fromAddress:
+          type: string
+          description: Sender address
+          example: "0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb0"
+        toAddress:
+          type: string
+          description: Recipient address
+          example: "0x1234567890123456789012345678901234567890"
+        direction:
+          type: string
+          enum: [INBOUND, OUTBOUND]
+          example: OUTBOUND
+        status:
+          type: string
+          enum: [PENDING, CONFIRMED, FAILED]
+          example: CONFIRMED
+        amount:
+          type: string
+          description: Transaction amount in base units (stringified integer)
+          pattern: "^[0-9]+$"
+          example: "1500000000000000000"
+        assetType:
+          type: string
+          enum: [NATIVE, ERC20, SPL, COSMOS_BANK, ERC721, ERC1155]
+          description: Type of asset transferred
+          example: ERC20
+        tokenAddress:
+          type: string
+          description: Smart contract address for tokens
+          example: "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48"
+        tokenId:
+          type: string
+          description: Token ID for NFTs
+          example: "12345"
+        decimals:
+          type: integer
+          description: Token decimals
+          example: 6
+        blockNumber:
+          type: integer
+          description: Block number where transaction was included
+          example: 15000000
+        blockTime:
+          type: string
+          format: date-time
+          description: Block timestamp
+        gasUsed:
+          type: string
+          pattern: "^[0-9]+$"
+          description: Gas units consumed (stringified)
+          example: "21000"
+        gasPrice:
+          type: string
+          pattern: "^[0-9]+$"
+          description: Gas price in wei or base units (stringified)
+          example: "50000000000"
+        txFeeAmount:
+          type: string
+          pattern: "^[0-9]+(\\.[0-9]+)?$"
+          description: Transaction fee in native currency (decimal string)
+          example: "0.00105"
+        txFeeUsd:
+          type: string
+          pattern: "^[0-9]+(\\.[0-9]+)?$"
+          description: Transaction fee in USD at time of tx
+          example: "2.45"
+        nonce:
+          type: integer
+          description: Transaction nonce
+          example: 42
+        refType:
+          type: string
+          description: Reference entity type (e.g., SETTLEMENT, WITHDRAWAL)
+          example: SETTLEMENT
+        refId:
+          type: string
+          description: Reference entity ID
+        source:
+          type: string
+          enum: [NODE, WEBHOOK, INDEXER, MANUAL]
+          description: Origin of transaction record
+          example: INDEXER
+        syncVersion:
+          type: string
+          description: Sync batch or version identifier
+          example: "sync-2025-11-10-001"
+        rawTx:
+          type: object
+          description: Raw transaction payload (RPC-level)
+        logs:
+          type: array
+          description: Event logs emitted by transaction
+          items:
+            type: object
+        confirmations:
+          type: integer
+          description: Number of block confirmations received
+          example: 12
+        finalized:
+          type: boolean
+          description: Whether transaction has reached finality per chain rules
+          example: true
+        reorgStatus:
+          type: string
+          enum: [STABLE, REORGED_OUT, PENDING]
+          description: Reorg status tracking
+          example: STABLE
+        observedAt:
+          type: string
+          format: date-time
+          description: Timestamp when transaction was first observed
+        fiatRateSource:
+          type: string
+          enum: [COINGECKO, CHAINLINK, BINANCE, INTERNAL]
+          description: Source of fiat rate
+          example: CHAINLINK
+        fiatRateTimestamp:
+          type: string
+          format: date-time
+          description: Timestamp of fiat rate snapshot
+        createdBy:
+          type: string
+          description: Service or indexer that created this record
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    ChainAdapterHealth:
+      description: Chain adapter health resource (alias for HealthMetrics)
+      allOf:
+        - $ref: "#/components/schemas/HealthMetrics"
+
+    HealthMetrics:
+      type: object
+      description: Health check metrics for blockchain adapters
+      required:
+        - status
+        - latencyMs
+        - blockHeight
+        - uptime
+      properties:
+        status:
+          type: string
+          enum: [HEALTHY, DEGRADED, DOWN]
+          example: HEALTHY
+        latencyMs:
+          type: integer
+          description: Current RPC response latency
+          example: 45
+        blockHeight:
+          type: integer
+          description: Latest block number
+          example: 18500000
+        syncLag:
+          type: integer
+          description: Blocks behind network tip
+          example: 0
+        uptime:
+          type: number
+          description: Uptime percentage (last 24h)
+          example: 99.95
+        lastChecked:
+          type: string
+          format: date-time
+          description: Last health check timestamp
+
+    Wallet:
+      type: object
+      description: Represents a blockchain wallet under an organization or account.
+      required:
+        - id
+        - orgId
+        - address
+        - type
+        - chainNamespace
+        - status
+      properties:
+        id:
+          $ref: "#/components/schemas/WalletId"
+        orgId:
+          $ref: ./common/primitives.yaml#/components/schemas/OrgId
+        ownerAccountId:
+          $ref: ./common/primitives.yaml#/components/schemas/AccountId
+        address:
+          type: string
+          description: Blockchain address (EVM 0x-hex, Solana base58, etc.)
+          example: "0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb0"
+        chainNamespace:
+          type: string
+          enum: [EVM, COSMOS, SOLANA, POLKADOT]
+          description: Blockchain namespace
+          example: EVM
+        chainId:
+          type: string
+          description: Reference to Chain.chainId or namespace-scoped identifier
+          example: "1"
+        type:
+          type: string
+          enum: [CUSTODIAL, NON_CUSTODIAL, MPC, HARDWARE]
+          example: MPC
+        label:
+          type: string
+          description: User-defined label
+          example: Trading Wallet
+        status:
+          type: string
+          enum: [ACTIVE, DISABLED, ARCHIVED]
+          example: ACTIVE
+        derivationPath:
+          type: string
+          description: HD wallet derivation path (BIP-44)
+          example: "m/44'/60'/0'/0/0"
+        parentWalletId:
+          $ref: "#/components/schemas/WalletId"
+        walletIndex:
+          type: integer
+          description: Index in HD wallet sequence
+          example: 0
+        kycStatus:
+          type: string
+          enum: [PENDING, VERIFIED, REJECTED, NOT_REQUIRED]
+          description: KYC verification status for compliance
+          example: VERIFIED
+        kycProvider:
+          type: string
+          description: External KYC provider (if used)
+          example: Veriff
+        kycReference:
+          type: string
+          description: Reference ID from KYC provider
+        jurisdiction:
+          type: string
+          description: Regulatory jurisdiction (ISO 3166-1 alpha-2)
+          example: US
+        source:
+          type: string
+          enum: [MANUAL, IMPORTED, CUSTODIAL_API, MPC_CLUSTER]
+          description: How this wallet was created
+          example: MPC_CLUSTER
+        createdBy:
+          type: string
+          description: Service or user that created this wallet
+        updatedBy:
+          type: string
+          description: Service or user that last updated this wallet
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    WalletId:
+      type: string
+      description: Wallet identifier (prefixed ULID)
+      pattern: "^BL_[0-9A-HJKMNPQRSTVWXYZ]{26}$"
+      example: "BL_01HQZX3K8PQRS7VN6M9TW1ABJZ"
+
+    WalletBalance:
+      type: object
+      description: Current balance of a wallet for a specific asset.
+      required:
+        - assetType
+        - chainId
+        - chainNamespace
+        - amount
+      properties:
+        chainId:
+          type: string
+          example: "1"
+        chainNamespace:
+          type: string
+          enum: [EVM, COSMOS, SOLANA, POLKADOT]
+          example: EVM
+        assetType:
+          type: string
+          enum: [NATIVE, ERC20, SPL, COSMOS_BANK, ERC721, ERC1155]
+          example: ERC20
+        tokenAddress:
+          type: string
+          description: Smart contract address for tokens
+          example: "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48"
+        tokenId:
+          type: string
+          description: Token ID for NFTs (if applicable)
+        symbol:
+          type: string
+          description: Asset symbol
+          example: USDC
+        decimals:
+          type: integer
+          description: Token decimals
+          example: 6
+        amount:
+          type: string
+          description: Balance in base units (stringified integer)
+          pattern: "^[0-9]+$"
+          example: "150000000"
+        amountDecimal:
+          type: string
+          description: Human-readable balance (decimal string)
+          pattern: "^[0-9]+(\\.[0-9]+)?$"
+          example: "150.000000"
+        fiatValueUsd:
+          type: string
+          description: Fiat valuation in USD at snapshot time
+          pattern: "^[0-9]+(\\.[0-9]+)?$"
+          example: "150.25"
+        rateSource:
+          type: string
+          enum: [COINGECKO, CHAINLINK, BINANCE, INTERNAL]
+          description: Fiat rate source
+        rateTimestamp:
+          type: string
+          format: date-time
+          description: Timestamp of rate snapshot

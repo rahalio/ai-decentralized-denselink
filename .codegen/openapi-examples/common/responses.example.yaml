@@ -1,0 +1,423 @@
+openapi: 3.1.0
+info:
+  title: Aipoio - Common Responses
+  version: 2.2.0
+  description:
+    "Shared response templates for success and error outcomes across all Aipoio APIs.
+
+    Each response references schemas from ./common/errors.yaml for consistency.
+
+    "
+  license:
+    name: Proprietary
+    url: https://ddd-codegen-starter.local/license
+
+servers:
+  - url: https://api.ddd-codegen-starter.local
+    description: Placeholder (this file contains only reusable components)
+
+paths: {}
+
+components:
+  schemas:
+    ResponseMeta:
+      type: object
+      required:
+        - correlationId
+        - timestamp
+      description: "Standard metadata included in all API responses.
+
+        Provides correlation tracking for distributed tracing and audit compliance.
+
+        "
+      properties:
+        correlationId:
+          type: string
+          description:
+            "Server-generated domain-scoped correlation ID for distributed tracing (format: {DOMAIN_PREFIX}_{ULID}).
+
+            Domain prefixes: EX (exchange), AU (auth), TR (treasury), GO (governance), BL (blockchain), etc.
+
+            Use this ID when contacting support or investigating issues.
+
+            "
+          example: EX_01HQZX3K8PQRS7VN6M9TW1ABJZ
+        timestamp:
+          type: string
+          format: date-time
+          description: Server timestamp when response was generated (ISO 8601 UTC)
+          example: "2025-11-10T12:34:56.789Z"
+        requestId:
+          type: string
+          description: Optional client-provided request ID (echoed back if provided)
+          example: client-req-12345
+    DataEnvelope:
+      type: object
+      required:
+        - data
+        - meta
+      description: "Standard success response envelope.
+
+        All successful API responses are wrapped in this structure.
+
+        "
+      properties:
+        data:
+          description: Response payload (type varies by endpoint)
+        meta:
+          $ref: "#/components/schemas/ResponseMeta"
+      example:
+        data:
+          id: EX_01HQZX3K8PQRS7VN6M9TW1ABJZ
+          status: ACTIVE
+        meta:
+          correlationId: EX_01HQZX3K8PQRS7VN6M9TW1ABJZ
+          timestamp: "2025-11-10T12:34:56.789Z"
+    PagedDataEnvelope:
+      description: "Paginated response envelope - base schema.
+
+        Do not use directly. Use ListResponseEnvelope instead.
+
+        "
+      type: object
+      required:
+        - data
+        - meta
+      properties:
+        data:
+          type: object
+          required:
+            - items
+          properties:
+            items:
+              type: array
+              items: {}
+        meta:
+          allOf:
+            - $ref: "#/components/schemas/ResponseMeta"
+            - type: object
+              required:
+                - pagination
+              properties:
+                pagination:
+                  $ref: ./pagination.yaml#/components/schemas/PageInfo
+    ListResponseEnvelope:
+      description:
+        "Paginated list response envelope - use this for list endpoints.
+
+        Concrete schemas extend this and specify the item type.
+
+        "
+      type: object
+      required:
+        - data
+        - meta
+      properties:
+        data:
+          type: object
+          required:
+            - items
+          properties:
+            items:
+              type: array
+              items: {}
+        meta:
+          allOf:
+            - $ref: "#/components/schemas/ResponseMeta"
+            - type: object
+              required:
+                - pagination
+              properties:
+                pagination:
+                  $ref: ./pagination.yaml#/components/schemas/PageInfo
+      example:
+        data:
+          items:
+            - id: EX_01HQZX3K8PQRS7VN6M9TW1ABJZ
+            - id: EX_01HQZX3K8PQRS7VN6M9TW1ABJZ
+        meta:
+          correlationId: EX_01HQZX3K8PQRS7VN6M9TW1ABJZ
+          timestamp: "2025-11-10T12:34:56.789Z"
+          pagination:
+            nextCursor: EX_01HQZX3K8PQRS7VN6M9TW1ABJZ
+            prevCursor: null
+            hasMore: true
+    ErrorEnvelope:
+      type: object
+      required:
+        - error
+        - message
+        - meta
+      description: "Standard error response envelope.
+
+        All error responses use this structure for consistency.
+
+        "
+      properties:
+        error:
+          type: string
+          description: Machine-readable error code
+          example: VALIDATION_ERROR
+        message:
+          type: string
+          description: Human-readable error message
+          example: Invalid market configuration
+        detail:
+          type: object
+          description: Additional error context (structure varies by error type)
+          additionalProperties: true
+        meta:
+          $ref: "#/components/schemas/ResponseMeta"
+      example:
+        error: VALIDATION_ERROR
+        message: Invalid market configuration
+        detail:
+          field: lotSize
+          reason: Must be greater than 0
+        meta:
+          correlationId: EX_01HQZX3K8PQRS7VN6M9TW1ABJZ
+          timestamp: "2025-11-10T12:34:56.789Z"
+  responses:
+    OkNullableObject:
+      description: 'Successful GET response with nullable data envelope.
+
+        Returns 200 OK even when resource is not found (data will be null).
+
+        This follows the "Nullable Data Envelope" convention.
+
+        '
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              data:
+                oneOf:
+                  - type: object
+                    description: Resource data when found
+                  - type: "null"
+                    description: Null when resource does not exist
+            required:
+              - data
+          examples:
+            found:
+              summary: Resource found
+              value:
+                data:
+                  id: 123e4567-e89b-12d3-a456-426614174000
+                  name: Example Resource
+            notFound:
+              summary: Resource not found
+              value:
+                data: null
+    OkObjectResponse:
+      description: Successful single-object response (guaranteed to exist)
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              data:
+                type: object
+                description: Resource data object
+    OkListResponse:
+      description: Paginated list of resources
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: ./pagination.yaml#/components/schemas/PageResponse
+              - type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+    CreatedResponse:
+      description: Resource created successfully (201)
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              data:
+                type: object
+                description: Created resource
+    NoContentResponse:
+      description: Successful operation with no response body (204)
+    AcceptedResponse:
+      description: Accepted for asynchronous processing (202)
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              taskId:
+                type: string
+                example: task_123abc
+              status:
+                type: string
+                enum:
+                  - PENDING
+                  - PROCESSING
+                  - COMPLETED
+                example: PENDING
+    BadRequest:
+      description: Invalid request payload or query parameters (400)
+      content:
+        application/json:
+          schema:
+            $ref: ./errors.yaml#/components/schemas/Problem
+          example:
+            type: https://docs.ddd-codegen-starter.local/problems/bad-request
+            title: Bad Request
+            status: 400
+            detail: Invalid input parameters
+            code: BAD_REQUEST
+    Unauthorized:
+      description: Missing or invalid authentication credentials (401)
+      content:
+        application/json:
+          schema:
+            $ref: ./errors.yaml#/components/schemas/Problem
+          example:
+            type: https://docs.ddd-codegen-starter.local/problems/unauthorized
+            title: Unauthorized
+            status: 401
+            detail: Authentication required
+            code: UNAUTHORIZED
+    Forbidden:
+      description: Insufficient permissions (403)
+      content:
+        application/json:
+          schema:
+            $ref: ./errors.yaml#/components/schemas/Problem
+          example:
+            type: https://docs.ddd-codegen-starter.local/problems/forbidden
+            title: Forbidden
+            status: 403
+            detail: Insufficient permissions
+            code: FORBIDDEN
+    NotFound:
+      description: Resource not found (404)
+      content:
+        application/json:
+          schema:
+            $ref: ./errors.yaml#/components/schemas/Problem
+          example:
+            type: https://docs.ddd-codegen-starter.local/problems/not-found
+            title: Not Found
+            status: 404
+            detail: Resource not found
+            code: NOT_FOUND
+    Conflict:
+      description: Resource already exists or version conflict (409)
+      content:
+        application/json:
+          schema:
+            $ref: ./errors.yaml#/components/schemas/Problem
+          example:
+            type: https://docs.ddd-codegen-starter.local/problems/conflict
+            title: Conflict
+            status: 409
+            detail: Resource already exists
+            code: CONFLICT
+    ValidationError:
+      description: Request validation failed (422)
+      content:
+        application/json:
+          schema:
+            $ref: ./errors.yaml#/components/schemas/ValidationError
+          example:
+            type: https://docs.ddd-codegen-starter.local/problems/validation-error
+            title: Validation Error
+            status: 422
+            detail: Request validation failed
+            code: VALIDATION_ERROR
+            errors:
+              - field: email
+                message: Invalid email format
+    TooManyRequests:
+      description: Rate limit exceeded (429)
+      content:
+        application/json:
+          schema:
+            $ref: ./errors.yaml#/components/schemas/Problem
+          example:
+            type: https://docs.ddd-codegen-starter.local/problems/rate-limit
+            title: Too Many Requests
+            status: 429
+            detail: Rate limit exceeded
+            code: RATE_LIMIT_EXCEEDED
+    InternalServerError:
+      description: Unexpected internal error (500)
+      content:
+        application/json:
+          schema:
+            $ref: ./errors.yaml#/components/schemas/Problem
+          example:
+            type: https://docs.ddd-codegen-starter.local/problems/internal-error
+            title: Internal Server Error
+            status: 500
+            detail: An unexpected error occurred
+            code: INTERNAL_ERROR
+    ServiceUnavailable:
+      description: Service temporarily unavailable (503)
+      content:
+        application/json:
+          schema:
+            $ref: ./errors.yaml#/components/schemas/Problem
+          example:
+            type: https://docs.ddd-codegen-starter.local/problems/service-unavailable
+            title: Service Unavailable
+            status: 503
+            detail: Service temporarily unavailable
+            code: SERVICE_UNAVAILABLE
+    OrgMismatch:
+      description: Organization ID mismatch between path and resource (400)
+      content:
+        application/json:
+          schema:
+            $ref: ./errors.yaml#/components/schemas/OrgMismatchError
+          example:
+            type: https://docs.ddd-codegen-starter.local/problems/org-mismatch
+            title: Organization Mismatch
+            status: 400
+            detail: Resource does not belong to the specified organization
+            code: ORG_MISMATCH
+    OrgUnverified:
+      description: Organization not yet verified (403)
+      content:
+        application/json:
+          schema:
+            $ref: ./errors.yaml#/components/schemas/OrgUnverifiedError
+          example:
+            type: https://docs.ddd-codegen-starter.local/problems/org-unverified
+            title: Organization Not Verified
+            status: 403
+            detail: Organization verification required
+            code: ORG_UNVERIFIED
+    DnssecRequired:
+      description: DNSSEC required but not detected (400)
+      content:
+        application/json:
+          schema:
+            $ref: ./errors.yaml#/components/schemas/DnssecRequiredError
+          example:
+            type: https://docs.ddd-codegen-starter.local/problems/dnssec-required
+            title: DNSSEC Required
+            status: 400
+            detail: DNSSEC required for verified domains
+            code: DNSSEC_REQUIRED
+    WebhookDomainMismatch:
+      description: Webhook URL not under verified domain (400)
+      content:
+        application/json:
+          schema:
+            $ref: ./errors.yaml#/components/schemas/WebhookDomainMismatchError
+          example:
+            type: https://docs.ddd-codegen-starter.local/problems/webhook-domain-mismatch
+            title: Webhook Domain Mismatch
+            status: 400
+            detail: Webhook URL domain must match verified organization domain
+            code: WEBHOOK_DOMAIN_MISMATCH

@@ -1,0 +1,141 @@
+openapi: 3.1.0
+info:
+  title: Aipoio - Error Schemas
+  version: 2.2.0
+  description:
+    "Core RFC7807-style problem schemas used across all Aipoio services.
+
+    These define the data structure of error objects only.
+    HTTP response envelopes are defined in ./common/responses.yaml.
+    "
+  license:
+    name: Proprietary
+    url: https://ddd-codegen-starter.local/license
+
+servers:
+  - url: https://api.ddd-codegen-starter.local
+    description: Placeholder (schemas only)
+
+paths: {}
+
+components:
+  schemas:
+    Problem:
+      type: object
+      description: RFC7807-style error object for consistent error representation.
+      required:
+        - type
+        - title
+        - status
+      properties:
+        type:
+          type: string
+          format: uri
+          description: URI identifying the error type
+          example: https://docs.ddd-codegen-starter.local/problems/validation-error
+        title:
+          type: string
+          description: Short, human-readable summary of the problem
+        status:
+          type: integer
+          minimum: 100
+          maximum: 599
+          description: HTTP status code for this error
+        detail:
+          type: string
+          description: Detailed explanation of the specific error occurrence
+        instance:
+          type: string
+          description: URI reference identifying this specific error occurrence
+        code:
+          type: string
+          description: Machine-readable internal code (e.g., VALIDATION_ERROR)
+        traceId:
+          type: string
+          description: Request trace ID for debugging
+        errors:
+          type: array
+          description: Optional list of field-level validation issues
+          items:
+            type: object
+            required:
+              - field
+              - message
+            properties:
+              field:
+                type: string
+              message:
+                type: string
+              code:
+                type: string
+    ValidationError:
+      allOf:
+        - $ref: "#/components/schemas/Problem"
+        - type: object
+          properties:
+            code:
+              enum:
+                - VALIDATION_ERROR
+            status:
+              enum:
+                - 422
+    OrgMismatchError:
+      allOf:
+        - $ref: "#/components/schemas/Problem"
+        - type: object
+          properties:
+            code:
+              enum:
+                - ORG_MISMATCH
+            status:
+              enum:
+                - 400
+            title:
+              enum:
+                - Organization Mismatch
+            detail:
+              example: X-Org-Id header must match path orgId parameter
+    OrgUnverifiedError:
+      allOf:
+        - $ref: "#/components/schemas/Problem"
+        - type: object
+          properties:
+            code:
+              enum:
+                - ORG_UNVERIFIED
+            status:
+              enum:
+                - 403
+            title:
+              enum:
+                - Organization Not Verified
+            detail:
+              example: Organization verification is required for this operation.
+    DnssecRequiredError:
+      allOf:
+        - $ref: "#/components/schemas/Problem"
+        - type: object
+          properties:
+            code:
+              enum:
+                - DNSSEC_REQUIRED
+            status:
+              enum:
+                - 400
+            title:
+              enum:
+                - DNSSEC Required
+    WebhookDomainMismatchError:
+      allOf:
+        - $ref: "#/components/schemas/Problem"
+        - type: object
+          properties:
+            code:
+              enum:
+                - WEBHOOK_DOMAIN_MISMATCH
+            status:
+              enum:
+                - 400
+            title:
+              enum:
+                - Webhook Domain Mismatch

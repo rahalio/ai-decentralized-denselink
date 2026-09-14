@@ -1,0 +1,82 @@
+openapi: 3.1.0
+info:
+  title: MeshPorts schemas
+  version: 0.1.0
+  description: MeshPort allocation and collision-prevention schemas.
+paths: {}
+components:
+  schemas:
+    MeshPortStatus:
+      type: string
+      enum: [allocated, revoked]
+
+    MeshPort:
+      type: object
+      required: [id, port, appId, status, createdAt]
+      properties:
+        id:
+          $ref: ./common/primitives.yaml#/components/schemas/MeshPortId
+        port:
+          type: integer
+          minimum: 1
+          maximum: 65535
+          description: Unique mesh service port number.
+        appId:
+          $ref: ./common/primitives.yaml#/components/schemas/AppId
+        sdkVersion:
+          type: string
+        status:
+          $ref: '#/components/schemas/MeshPortStatus'
+        collisionBlocked:
+          type: boolean
+          description: True when a collision was detected and publication blocked.
+        conflictingAppId:
+          $ref: ./common/primitives.yaml#/components/schemas/AppId
+        createdAt:
+          type: string
+          format: date-time
+        revokedAt:
+          type: string
+          format: date-time
+
+    MeshPortAllocate:
+      type: object
+      required: [appId]
+      properties:
+        appId:
+          $ref: ./common/primitives.yaml#/components/schemas/AppId
+        preferredPort:
+          type: integer
+          minimum: 1
+          maximum: 65535
+        sdkVersion:
+          type: string
+
+    MeshPortListData:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/MeshPort'
+        nextCursor:
+          type: string
+
+    MeshPortResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: '#/components/schemas/MeshPort'
+        meta:
+          $ref: ./common/envelopes.yaml#/components/schemas/ResponseMeta
+
+    MeshPortListResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: '#/components/schemas/MeshPortListData'
+        meta:
+          $ref: ./common/envelopes.yaml#/components/schemas/ResponseMeta

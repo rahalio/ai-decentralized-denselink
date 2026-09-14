@@ -1,0 +1,52 @@
+openapi: 3.1.0
+info:
+  title: Shared parameters
+  version: 0.1.0
+  description: Path and header parameters shared across domain APIs.
+paths: {}
+components:
+  parameters:
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: true
+      description: |
+        Client-supplied key for safe retries on mutating POSTs (≤128 chars).
+        Replay with the same key and body returns the original result; different
+        body with the same key yields 409.
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 128
+    TenantIdPath:
+      name: tenantId
+      in: path
+      required: true
+      description: Tenant id (`tnt_…`).
+      schema:
+        $ref: ./primitives.yaml#/components/schemas/TenantId
+    UserIdPath:
+      name: userId
+      in: path
+      required: true
+      description: User id (`usr_…`).
+      schema:
+        $ref: ./primitives.yaml#/components/schemas/UserId
+    Cursor:
+      name: cursor
+      in: query
+      required: false
+      description: Opaque keyset pagination cursor.
+      schema:
+        type: string
+    Limit:
+      name: limit
+      in: query
+      required: false
+      description: Page size (1–100).
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 25
+

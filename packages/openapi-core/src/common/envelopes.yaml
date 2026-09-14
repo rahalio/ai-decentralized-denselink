@@ -1,0 +1,68 @@
+openapi: 3.1.0
+info:
+  title: Shared response envelopes
+  version: 0.1.0
+  description: Shared success envelopes — `{ data, meta }` (and list envelopes with `data.items`).
+paths: {}
+components:
+  schemas:
+    ResponseMeta:
+      type: object
+      properties:
+        requestId:
+          type: string
+          format: uuid
+          description: Correlation id for this HTTP request.
+        correlationId:
+          type: string
+          description: Optional end-to-end correlation id.
+        generatedAt:
+          type: string
+          format: date-time
+          description: Server time when the payload was produced.
+    DataEnvelope:
+      type: object
+      description: Thin success envelope — `data` holds the resource.
+      required:
+        - data
+      properties:
+        data:
+          description: Domain resource or result object.
+        meta:
+          $ref: '#/components/schemas/ResponseMeta'
+    PageInfo:
+      type: object
+      properties:
+        page:
+          type: integer
+          minimum: 1
+        limit:
+          type: integer
+          minimum: 1
+        total:
+          type: integer
+          minimum: 0
+        cursor:
+          type: string
+          description: Opaque cursor for keyset pagination.
+    PagedDataEnvelope:
+      type: object
+      description: List success envelope with data.items + optional pagination meta.
+      required:
+        - data
+      properties:
+        data:
+          type: object
+          required:
+            - items
+          properties:
+            items:
+              type: array
+              items: {}
+        meta:
+          allOf:
+            - $ref: '#/components/schemas/ResponseMeta'
+            - type: object
+              properties:
+                pagination:
+                  $ref: '#/components/schemas/PageInfo'

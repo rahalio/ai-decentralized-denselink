@@ -1,0 +1,34 @@
+apis:
+  identity:
+    root: src/identity.yaml
+  meshports:
+    root: src/meshports.yaml
+  licenses:
+    root: src/licenses.yaml
+  density:
+    root: src/density.yaml
+  venues:
+    root: src/venues.yaml
+  grants:
+    root: src/grants.yaml
+  telemetry:
+    root: src/telemetry.yaml
+  reports:
+    root: src/reports.yaml
+
+extends:
+  - recommended
+
+rules:
+  no-unused-components: off
+  operation-4xx-response: warn
+  info-license: off
+  info-license-url: off
+  tag-description: off
+  operation-operationId: error
+  no-invalid-media-type-examples: off
+
+theme:
+  openapi:
+    generateCodeSamples:
+      languages: []

@@ -1,0 +1,165 @@
+openapi: 3.1.0
+info:
+  title: Denselink Licenses API
+  version: 0.1.0
+  description: |
+    SDK license key issuance, build binding, encryption attestation, and revoke.
+  license:
+    name: Proprietary
+    url: https://denselink.local/license
+  x-domain: lic
+  x-product: denselink
+servers:
+  - url: https://api.denselink.local
+    description: Local / product API
+security:
+  - apiKey: []
+tags:
+  - name: Licenses
+    description: SDK license keys and build attestation
+paths:
+  /v1/licenses:
+    get:
+      operationId: listLicenseKeys
+      tags: [Licenses]
+      summary: List license keys
+      parameters:
+        - $ref: ./common/parameters.yaml#/components/parameters/Cursor
+        - $ref: ./common/parameters.yaml#/components/parameters/Limit
+        - name: appId
+          in: query
+          schema:
+            $ref: ./common/primitives.yaml#/components/schemas/AppId
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [active, revoked]
+      responses:
+        '200':
+          description: License keys page
+          content:
+            application/json:
+              schema:
+                $ref: ./licenses.schemas.yaml#/components/schemas/LicenseKeyListResponse
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+    post:
+      operationId: issueLicenseKey
+      tags: [Licenses]
+      summary: Issue an SDK license key (secret returned once)
+      parameters:
+        - $ref: ./common/parameters.yaml#/components/parameters/IdempotencyKey
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: ./licenses.schemas.yaml#/components/schemas/LicenseKeyCreate
+      responses:
+        '201':
+          description: License issued
+          content:
+            application/json:
+              schema:
+                $ref: ./licenses.schemas.yaml#/components/schemas/LicenseKeyCreatedResponse
+        '400':
+          $ref: ./common/responses.yaml#/components/responses/BadRequest
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+
+  /v1/licenses/{licenseId}:
+    parameters:
+      - name: licenseId
+        in: path
+        required: true
+        schema:
+          $ref: ./common/primitives.yaml#/components/schemas/LicenseId
+    get:
+      operationId: getLicenseKey
+      tags: [Licenses]
+      summary: Get license key metadata
+      responses:
+        '200':
+          description: License key
+          content:
+            application/json:
+              schema:
+                $ref: ./licenses.schemas.yaml#/components/schemas/LicenseKeyResponse
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        '404':
+          $ref: ./common/responses.yaml#/components/responses/NotFound
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+
+  /v1/licenses/{licenseId}/revoke:
+    parameters:
+      - name: licenseId
+        in: path
+        required: true
+        schema:
+          $ref: ./common/primitives.yaml#/components/schemas/LicenseId
+    post:
+      operationId: revokeLicenseKey
+      tags: [Licenses]
+      summary: Revoke a license key (abuse / admin)
+      parameters:
+        - $ref: ./common/parameters.yaml#/components/parameters/IdempotencyKey
+      responses:
+        '200':
+          description: License revoked
+          content:
+            application/json:
+              schema:
+                $ref: ./licenses.schemas.yaml#/components/schemas/LicenseKeyResponse
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        '404':
+          $ref: ./common/responses.yaml#/components/responses/NotFound
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+
+  /v1/licenses/{licenseId}/attestation:
+    parameters:
+      - name: licenseId
+        in: path
+        required: true
+        schema:
+          $ref: ./common/primitives.yaml#/components/schemas/LicenseId
+    post:
+      operationId: bindLicenseAttestation
+      tags: [Licenses]
+      summary: Bind encryption attestation for a build
+      parameters:
+        - $ref: ./common/parameters.yaml#/components/parameters/IdempotencyKey
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: ./licenses.schemas.yaml#/components/schemas/AttestationBind
+      responses:
+        '200':
+          description: Attestation updated
+          content:
+            application/json:
+              schema:
+                $ref: ./licenses.schemas.yaml#/components/schemas/LicenseKeyResponse
+        '400':
+          $ref: ./common/responses.yaml#/components/responses/BadRequest
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        '404':
+          $ref: ./common/responses.yaml#/components/responses/NotFound
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+
+components:
+  securitySchemes:
+    apiKey:
+      $ref: ./common/security.yaml#/components/securitySchemes/apiKey

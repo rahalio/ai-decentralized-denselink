@@ -1,0 +1,62 @@
+openapi: 3.1.0
+info:
+  title: Telemetry schemas
+  version: 0.1.0
+  description: Node telemetry aggregate ingest schemas.
+paths: {}
+components:
+  schemas:
+    NodeTelemetryAggregate:
+      type: object
+      required: [id, appId, licenseId, activeNodes, capturedAt]
+      properties:
+        id:
+          $ref: ./common/primitives.yaml#/components/schemas/TelemetryAggregateId
+        appId:
+          $ref: ./common/primitives.yaml#/components/schemas/AppId
+        licenseId:
+          $ref: ./common/primitives.yaml#/components/schemas/LicenseId
+        activeNodes:
+          type: integer
+          minimum: 0
+        geoBin:
+          type: string
+          description: ~80–100m geographic bin identifier.
+        sessionDurationMinutesAvg:
+          type: number
+          format: float
+        capturedAt:
+          type: string
+          format: date-time
+        ingestedAt:
+          type: string
+          format: date-time
+
+    NodeTelemetryAggregateCreate:
+      type: object
+      required: [appId, licenseId, activeNodes, capturedAt]
+      properties:
+        appId:
+          $ref: ./common/primitives.yaml#/components/schemas/AppId
+        licenseId:
+          $ref: ./common/primitives.yaml#/components/schemas/LicenseId
+        activeNodes:
+          type: integer
+          minimum: 0
+        geoBin:
+          type: string
+        sessionDurationMinutesAvg:
+          type: number
+          format: float
+        capturedAt:
+          type: string
+          format: date-time
+
+    NodeTelemetryAggregateResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: '#/components/schemas/NodeTelemetryAggregate'
+        meta:
+          $ref: ./common/envelopes.yaml#/components/schemas/ResponseMeta

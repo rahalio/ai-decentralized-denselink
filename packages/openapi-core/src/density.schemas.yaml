@@ -1,0 +1,138 @@
+openapi: 3.1.0
+info:
+  title: Density schemas
+  version: 0.1.0
+  description: Density modelling and piggyback discovery schemas.
+paths: {}
+components:
+  schemas:
+    DensityModelRequest:
+      type: object
+      required: [city, populationPerSqKm]
+      properties:
+        city:
+          type: string
+        populationPerSqKm:
+          type: number
+          format: double
+        targetPenetrationPercent:
+          type: number
+          format: float
+        nodeRangeMeters:
+          type: integer
+          minimum: 80
+          maximum: 100
+          default: 90
+        venueFootprintSqKm:
+          type: number
+          format: double
+        benchmarkPreset:
+          type: string
+          enum: [dhaka, san_francisco, custom]
+          default: custom
+
+    DensityModelResult:
+      type: object
+      required: [id, city, requiredPenetrationPercent, estimatedUsefulCoverage, createdAt]
+      properties:
+        id:
+          $ref: ./common/primitives.yaml#/components/schemas/DensityModelId
+        city:
+          type: string
+        requiredPenetrationPercent:
+          type: number
+          format: float
+        estimatedUsefulCoverage:
+          type: boolean
+        gapBelowThreshold:
+          type: boolean
+          description: True when plan is below useful blanket coverage threshold.
+        estimatedNodes:
+          type: integer
+        benchmarkNote:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    PiggybackRegion:
+      type: object
+      required: [region, contributorApps, launchReadinessScore]
+      properties:
+        region:
+          type: string
+        contributorApps:
+          type: array
+          items:
+            type: object
+            required: [appId, densityRank, activeNodes]
+            properties:
+              appId:
+                $ref: ./common/primitives.yaml#/components/schemas/AppId
+              densityRank:
+                type: integer
+              activeNodes:
+                type: integer
+              alwaysOnCampaign:
+                type: boolean
+        launchReadinessScore:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 100
+        suggestedVenueTypes:
+          type: array
+          items:
+            type: string
+            enum: [stadium, school, mall]
+        greenfield:
+          type: boolean
+
+    DensityModelListData:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/DensityModelResult'
+        nextCursor:
+          type: string
+
+    PiggybackListData:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/PiggybackRegion'
+        nextCursor:
+          type: string
+
+    DensityModelResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: '#/components/schemas/DensityModelResult'
+        meta:
+          $ref: ./common/envelopes.yaml#/components/schemas/ResponseMeta
+
+    DensityModelListResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: '#/components/schemas/DensityModelListData'
+        meta:
+          $ref: ./common/envelopes.yaml#/components/schemas/ResponseMeta
+
+    PiggybackListResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: '#/components/schemas/PiggybackListData'
+        meta:
+          $ref: ./common/envelopes.yaml#/components/schemas/ResponseMeta

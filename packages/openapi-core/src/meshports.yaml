@@ -1,0 +1,118 @@
+openapi: 3.1.0
+info:
+  title: Denselink MeshPorts API
+  version: 0.1.0
+  description: |
+    MeshPort allocation registry with hard collision detection so one app
+    cannot intercept another’s mesh traffic.
+  license:
+    name: Proprietary
+    url: https://denselink.local/license
+  x-domain: mpt
+  x-product: denselink
+servers:
+  - url: https://api.denselink.local
+    description: Local / product API
+security:
+  - apiKey: []
+tags:
+  - name: MeshPorts
+    description: MeshPort allocation and collision prevention
+paths:
+  /v1/meshports:
+    get:
+      operationId: listMeshPorts
+      tags: [MeshPorts]
+      summary: List MeshPort allocations
+      parameters:
+        - $ref: ./common/parameters.yaml#/components/parameters/Cursor
+        - $ref: ./common/parameters.yaml#/components/parameters/Limit
+        - name: appId
+          in: query
+          schema:
+            $ref: ./common/primitives.yaml#/components/schemas/AppId
+      responses:
+        '200':
+          description: MeshPorts page
+          content:
+            application/json:
+              schema:
+                $ref: ./meshports.schemas.yaml#/components/schemas/MeshPortListResponse
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+    post:
+      operationId: allocateMeshPort
+      tags: [MeshPorts]
+      summary: Allocate a unique MeshPort (409 on collision)
+      parameters:
+        - $ref: ./common/parameters.yaml#/components/parameters/IdempotencyKey
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: ./meshports.schemas.yaml#/components/schemas/MeshPortAllocate
+      responses:
+        '201':
+          description: MeshPort allocated
+          content:
+            application/json:
+              schema:
+                $ref: ./meshports.schemas.yaml#/components/schemas/MeshPortResponse
+        '400':
+          $ref: ./common/responses.yaml#/components/responses/BadRequest
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        '409':
+          $ref: ./common/responses.yaml#/components/responses/Conflict
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+
+  /v1/meshports/{meshPortId}:
+    parameters:
+      - name: meshPortId
+        in: path
+        required: true
+        schema:
+          $ref: ./common/primitives.yaml#/components/schemas/MeshPortId
+    get:
+      operationId: getMeshPort
+      tags: [MeshPorts]
+      summary: Get a MeshPort allocation
+      responses:
+        '200':
+          description: MeshPort
+          content:
+            application/json:
+              schema:
+                $ref: ./meshports.schemas.yaml#/components/schemas/MeshPortResponse
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        '404':
+          $ref: ./common/responses.yaml#/components/responses/NotFound
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+    delete:
+      operationId: revokeMeshPort
+      tags: [MeshPorts]
+      summary: Revoke a MeshPort allocation
+      responses:
+        '200':
+          description: MeshPort revoked
+          content:
+            application/json:
+              schema:
+                $ref: ./meshports.schemas.yaml#/components/schemas/MeshPortResponse
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        '404':
+          $ref: ./common/responses.yaml#/components/responses/NotFound
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+
+components:
+  securitySchemes:
+    apiKey:
+      $ref: ./common/security.yaml#/components/securitySchemes/apiKey

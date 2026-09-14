@@ -1,0 +1,149 @@
+# Redocly CLI Configuration
+# Bundles multi-file OpenAPI specs into single files for code generation
+# Generated from authoritative source: ls openapi/*.yaml
+
+apis:
+  auth:
+    root: openapi/auth.yaml
+    x-openapi-ts:
+      output: packages/core/src/shared/types/generated-types/auth.types.ts
+
+  blockchain:
+    root: openapi/blockchain.yaml
+    x-openapi-ts:
+      output: packages/core/src/shared/types/generated-types/blockchain.types.ts
+
+  business-intelligence:
+    root: openapi/business-intelligence.yaml
+    x-openapi-ts:
+      output: packages/core/src/shared/types/generated-types/business-intelligence.types.ts
+
+  compliance:
+    root: openapi/compliance.yaml
+    x-openapi-ts:
+      output: packages/core/src/shared/types/generated-types/compliance.types.ts
+
+  custodian:
+    root: openapi/custodian.yaml
+    x-openapi-ts:
+      output: packages/core/src/shared/types/generated-types/custodian.types.ts
+
+  e-documents:
+    root: openapi/e-documents.yaml
+    x-openapi-ts:
+      output: packages/core/src/shared/types/generated-types/e-documents.types.ts
+
+  escrow:
+    root: openapi/escrow.yaml
+    x-openapi-ts:
+      output: packages/core/src/shared/types/generated-types/escrow.types.ts
+
+  events:
+    root: openapi/events.yaml
+    x-openapi-ts:
+      output: packages/core/src/shared/types/generated-types/events.types.ts
+
+  exchange:
+    root: openapi/exchange.yaml
+    x-openapi-ts:
+      output: packages/core/src/shared/types/generated-types/exchange.types.ts
+
+  fees-billing:
+    root: openapi/fees-billing.yaml
+    x-openapi-ts:
+      output: packages/core/src/shared/types/generated-types/fees-billing.types.ts
+
+  fiat-banking:
+    root: openapi/fiat-banking.yaml
+    x-openapi-ts:
+      output: packages/core/src/shared/types/generated-types/fiat-banking.types.ts
+
+  gateway:
+    root: openapi/gateway.yaml
+    x-openapi-ts:
+      output: packages/core/src/shared/types/generated-types/gateway.types.ts
+
+  governance:
+    root: openapi/governance.yaml
+    x-openapi-ts:
+      output: packages/core/src/shared/types/generated-types/governance.types.ts
+
+  identity:
+    root: openapi/identity.yaml
+    x-openapi-ts:
+      output: packages/core/src/shared/types/generated-types/identity.types.ts
+
+  market-oracles:
+    root: openapi/market-oracles.yaml
+    x-openapi-ts:
+      output: packages/core/src/shared/types/generated-types/market-oracles.types.ts
+
+  marketplace:
+    root: openapi/marketplace.yaml
+    x-openapi-ts:
+      output: packages/core/src/shared/types/generated-types/marketplace.types.ts
+
+  notifications:
+    root: openapi/notifications.yaml
+    x-openapi-ts:
+      output: packages/core/src/shared/types/generated-types/notifications.types.ts
+
+  observability:
+    root: openapi/observability.yaml
+    x-openapi-ts:
+      output: packages/core/src/shared/types/generated-types/observability.types.ts
+
+  pricing-refdata:
+    root: openapi/pricing-refdata.yaml
+    x-openapi-ts:
+      output: packages/core/src/shared/types/generated-types/pricing-refdata.types.ts
+
+  primary-market:
+    root: openapi/primary-market.yaml
+    x-openapi-ts:
+      output: packages/core/src/shared/types/generated-types/primary-market.types.ts
+
+  risk-limits:
+    root: openapi/risk-limits.yaml
+    x-openapi-ts:
+      output: packages/core/src/shared/types/generated-types/risk-limits.types.ts
+
+  sandbox:
+    root: openapi/sandbox.yaml
+    x-openapi-ts:
+      output: packages/core/src/shared/types/generated-types/sandbox.types.ts
+
+  settlements:
+    root: openapi/settlements.yaml
+    x-openapi-ts:
+      output: packages/core/src/shared/types/generated-types/settlements.types.ts
+
+  tenancy-trust:
+    root: openapi/tenancy-trust.yaml
+    x-openapi-ts:
+      output: packages/core/src/shared/types/generated-types/tenancy-trust.types.ts
+
+  transfer-agent:
+    root: openapi/transfer-agent.yaml
+    x-openapi-ts:
+      output: packages/core/src/shared/types/generated-types/transfer-agent.types.ts
+
+  treasury:
+    root: openapi/treasury.yaml
+    x-openapi-ts:
+      output: packages/core/src/shared/types/generated-types/treasury.types.ts
+
+  primitives:
+    root: openapi/common/primitives.yaml
+    x-openapi-ts:
+      output: packages/core/src/shared/types/generated-types/primitives.types.ts
+
+  domain-models:
+    root: openapi/common/domain-models.yaml
+    x-openapi-ts:
+      output: packages/core/src/shared/types/generated-types/domain-models.types.ts
+
+  components:
+    root: openapi/common/components.yaml
+    x-openapi-ts:
+      output: packages/core/src/shared/types/generated-types/common.types.ts

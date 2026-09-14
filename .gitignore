@@ -1,23 +1,29 @@
 node_modules/
-.next/
 dist/
-build/
-out/
+.next/
 coverage/
-.turbo/
-.cache/
-*.log
+*.tsbuildinfo
 .DS_Store
 .env
 .env.*
 !.env.example
-*.pem
-.venv/
-__pycache__/
 
-# Codegen — do not push
-.codegen/
-codegen/
-**/zero_codegen/
+# Generated OpenAPI bundles — never commit (regenerate via pnpm bundle:openapi)
+packages/openapi-core/src/.bundled/
+
+# Codegen ephemeral artifacts — never commit/push
+# NOTE: The `.codegen/` toolchain + config ARE committed (required for zero-codegen).
+# Only ignore generated/ephemeral outputs under it:
+.codegen/**/__pycache__/
+.codegen/**/*.pyc
+.codegen/**/.pytest_cache/
 **/integration-events/generated/
 platform/tests/postman/generated/
+
+**/node_modules/
+**/__pycache__/
+*.pyc
+test-results/
+playwright-report/
+*.log
+.turbo/

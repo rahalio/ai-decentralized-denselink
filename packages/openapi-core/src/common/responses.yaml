@@ -1,0 +1,71 @@
+openapi: 3.1.0
+info:
+  title: Shared HTTP responses
+  version: 0.1.0
+  description: Reusable Problem Detail responses for product APIs.
+paths: {}
+components:
+  responses:
+    Problem:
+      description: Error (RFC 7807 Problem Details)
+      content:
+        application/problem+json:
+          schema:
+            $ref: ./problem.yaml#/components/schemas/Problem
+        application/json:
+          schema:
+            $ref: ./problem.yaml#/components/schemas/Problem
+    BadRequest:
+      description: Malformed request
+      content:
+        application/problem+json:
+          schema:
+            $ref: ./problem.yaml#/components/schemas/Problem
+        application/json:
+          schema:
+            $ref: ./problem.yaml#/components/schemas/Problem
+    Unauthorized:
+      description: Missing or invalid API key
+      content:
+        application/problem+json:
+          schema:
+            $ref: ./problem.yaml#/components/schemas/Problem
+        application/json:
+          schema:
+            $ref: ./problem.yaml#/components/schemas/Problem
+    Forbidden:
+      description: Authenticated but not permitted
+      content:
+        application/problem+json:
+          schema:
+            $ref: ./problem.yaml#/components/schemas/Problem
+        application/json:
+          schema:
+            $ref: ./problem.yaml#/components/schemas/Problem
+    NotFound:
+      description: Resource not found
+      content:
+        application/problem+json:
+          schema:
+            $ref: ./problem.yaml#/components/schemas/Problem
+        application/json:
+          schema:
+            $ref: ./problem.yaml#/components/schemas/Problem
+    Conflict:
+      description: Idempotency key reuse with different body, or state conflict
+      content:
+        application/problem+json:
+          schema:
+            $ref: ./problem.yaml#/components/schemas/Problem
+        application/json:
+          schema:
+            $ref: ./problem.yaml#/components/schemas/Problem
+    UnprocessableEntity:
+      description: Semantically invalid request (e.g. PACK_EMPTY)
+      content:
+        application/problem+json:
+          schema:
+            $ref: ./problem.yaml#/components/schemas/Problem
+        application/json:
+          schema:
+            $ref: ./problem.yaml#/components/schemas/Problem

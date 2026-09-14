@@ -1,0 +1,18 @@
+{
+  "name": "@denselink/openapi-core",
+  "version": "0.1.0",
+  "private": true,
+  "description": "OpenAPI contracts for Denselink (common + identity + product domains)",
+  "scripts": {
+    "lint:domains": "redocly lint",
+    "bundle:domains": "mkdir -p src/.bundled && redocly bundle identity --output src/.bundled/identity.openapi.yaml && redocly bundle identity --output src/.bundled/identity.json && redocly bundle meshports --output src/.bundled/meshports.openapi.yaml && redocly bundle meshports --output src/.bundled/meshports.json && redocly bundle licenses --output src/.bundled/licenses.openapi.yaml && redocly bundle licenses --output src/.bundled/licenses.json && redocly bundle density --output src/.bundled/density.openapi.yaml && redocly bundle density --output src/.bundled/density.json && redocly bundle venues --output src/.bundled/venues.openapi.yaml && redocly bundle venues --output src/.bundled/venues.json && redocly bundle grants --output src/.bundled/grants.openapi.yaml && redocly bundle grants --output src/.bundled/grants.json && redocly bundle telemetry --output src/.bundled/telemetry.openapi.yaml && redocly bundle telemetry --output src/.bundled/telemetry.json && redocly bundle reports --output src/.bundled/reports.openapi.yaml && redocly bundle reports --output src/.bundled/reports.json",
+    "lint": "pnpm run lint:domains",
+    "bundle": "pnpm run bundle:domains"
+  },
+  "devDependencies": {
+    "@redocly/cli": "^1.34.0"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

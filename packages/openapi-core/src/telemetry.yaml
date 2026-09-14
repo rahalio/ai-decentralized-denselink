@@ -1,0 +1,51 @@
+openapi: 3.1.0
+info:
+  title: Denselink Telemetry API
+  version: 0.1.0
+  description: |
+    Anonymised node heartbeat aggregates for density and venue analytics.
+  license:
+    name: Proprietary
+    url: https://denselink.local/license
+  x-domain: tla
+  x-product: denselink
+servers:
+  - url: https://api.denselink.local
+    description: Local / product API
+security:
+  - apiKey: []
+tags:
+  - name: Telemetry
+    description: Node telemetry aggregate ingest
+paths:
+  /v1/telemetry/aggregates:
+    post:
+      operationId: ingestNodeTelemetry
+      tags: [Telemetry]
+      summary: Ingest a node telemetry aggregate
+      parameters:
+        - $ref: ./common/parameters.yaml#/components/parameters/IdempotencyKey
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: ./telemetry.schemas.yaml#/components/schemas/NodeTelemetryAggregateCreate
+      responses:
+        '202':
+          description: Telemetry accepted
+          content:
+            application/json:
+              schema:
+                $ref: ./telemetry.schemas.yaml#/components/schemas/NodeTelemetryAggregateResponse
+        '400':
+          $ref: ./common/responses.yaml#/components/responses/BadRequest
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+
+components:
+  securitySchemes:
+    apiKey:
+      $ref: ./common/security.yaml#/components/securitySchemes/apiKey

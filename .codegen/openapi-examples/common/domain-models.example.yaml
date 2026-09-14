@@ -1,0 +1,162 @@
+openapi: 3.1.0
+info:
+  title: Aipoio - Domain Models (Tier 2)
+  version: 1.0.0
+  description:
+    "Shared domain models (Tier 2) used across multiple services (3+ services).
+
+    IMPORTANT: This file contains ONLY truly shared models used by 3+ services.
+    Service-specific models have been moved to their respective service OpenAPI files.
+
+    Truly Shared Models (8 total):
+    - Account, Org, Role, ApiKey (Core platform - used by ALL services)
+    - Project, Milestone, Payment (Shared business entities - used by 2-3 services)
+
+    Service-Specific Models (moved to service files):
+    - Governance: Vote, CorporateAction, BuybackWindow, ConversionEvent
+    - Market Oracles: ValuationReport, PriceTick, OracleAttestation, Disclosure
+    - Treasury: Distribution, LedgerEntry, EscrowAccount
+    - Primary Market: Offering, Subscription, TokenClass
+    "
+  license:
+    name: Proprietary
+    url: https://ddd-codegen-starter.local/license
+
+servers:
+  - url: https://api.ddd-codegen-starter.local
+    description: Placeholder (this file contains only reusable components)
+
+paths: {}
+
+components:
+  schemas:
+    Account:
+      type: object
+      description: User account in the identity system
+      required:
+        - id
+        - email
+        - status
+        - createdAt
+      properties:
+        id:
+          $ref: ./primitives.yaml#/components/schemas/AccountId
+        email:
+          type: string
+          format: email
+        status:
+          $ref: ./primitives.yaml#/components/schemas/AccountStatus
+        createdAt:
+          $ref: ./primitives.yaml#/components/schemas/Timestamp
+        lastLoginAt:
+          $ref: ./primitives.yaml#/components/schemas/NullableTimestamp
+        mfaEnabled:
+          type: boolean
+        emailVerified:
+          type: boolean
+    ApiKey:
+      type: object
+      description: API key for programmatic access
+      required:
+        - id
+        - accountId
+        - orgId
+        - name
+        - status
+        - createdAt
+      properties:
+        id:
+          type: string
+          pattern: ^key_[a-zA-Z0-9]{16,32}$
+        accountId:
+          $ref: ./primitives.yaml#/components/schemas/AccountId
+        orgId:
+          $ref: ./primitives.yaml#/components/schemas/OrgId
+        name:
+          type: string
+          description: Human-readable name for the API key
+        keyPreview:
+          type: string
+          description: First 8 characters of the key (for identification)
+          example: key_abcd
+        status:
+          $ref: ./primitives.yaml#/components/schemas/ApiKeyStatus
+        scopes:
+          type: array
+          items:
+            type: string
+          description: OAuth2 scopes granted to this API key
+        expiresAt:
+          $ref: ./primitives.yaml#/components/schemas/NullableTimestamp
+        createdAt:
+          $ref: ./primitives.yaml#/components/schemas/Timestamp
+        lastUsedAt:
+          $ref: ./primitives.yaml#/components/schemas/NullableTimestamp
+    Org:
+      type: object
+      description: Organization entity - used by Identity, Compliance, all tenant-scoped services
+      required:
+        - id
+        - legalName
+        - status
+      properties:
+        id:
+          $ref: ./primitives.yaml#/components/schemas/OrgId
+        legalName:
+          type: string
+          description: Legal registered name
+          example: Acme Investment Bank Ltd
+        country:
+          type: string
+          description: ISO 3166-1 alpha-2 country code
+          example: US
+        type:
+          type: string
+          enum:
+            - ISSUER
+            - SPV
+            - CUSTODIAN
+            - INVESTOR
+            - PLATFORM
+          description: Organization classification
+        status:
+          $ref: ./primitives.yaml#/components/schemas/OrgStatus
+        domain:
+          type: string
+          description: Verified domain name
+          example: acme-bank.com
+        createdAt:
+          $ref: ./primitives.yaml#/components/schemas/Timestamp
+        updatedAt:
+          $ref: ./primitives.yaml#/components/schemas/Timestamp
+    Role:
+      type: object
+      description: User role within an organization - used by Identity, Compliance
+      required:
+        - id
+        - name
+        - permissions
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+          enum:
+            - ADMIN
+            - OPERATIONS
+            - COMPLIANCE
+            - FINANCE
+            - PROJECT_MANAGER
+            - INVESTOR
+            - VIEWER
+        permissions:
+          type: array
+          items:
+            type: string
+          description: List of permission strings
+          example:
+            - read:projects
+            - write:offerings
+            - approve:subscriptions
+        orgId:
+          $ref: ./primitives.yaml#/components/schemas/OrgId

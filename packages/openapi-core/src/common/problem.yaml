@@ -1,0 +1,33 @@
+openapi: 3.1.0
+info:
+  title: Shared Problem Details
+  version: 0.1.0
+  description: RFC 7807 Problem Details for domain APIs.
+paths: {}
+components:
+  schemas:
+    Problem:
+      type: object
+      description: RFC 7807 Problem Details (provisional mapping for gateway errors).
+      properties:
+        type:
+          type: string
+          format: uri
+          description: URI reference identifying the problem type.
+        title:
+          type: string
+          description: Short human-readable summary.
+        status:
+          type: integer
+          description: HTTP status code.
+        detail:
+          type: string
+          description: Human-readable explanation specific to this occurrence.
+        instance:
+          type: string
+          format: uri
+          description: URI reference identifying this occurrence.
+        code:
+          type: string
+          description: Optional machine-readable error code from the gateway.
+      additionalProperties: true

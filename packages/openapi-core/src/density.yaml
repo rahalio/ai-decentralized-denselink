@@ -1,0 +1,121 @@
+openapi: 3.1.0
+info:
+  title: Denselink Density API
+  version: 0.1.0
+  description: |
+    City/venue density modelling (Dhaka ~5% vs SF ~90% benchmarks) and
+    piggyback discovery of existing mesh contributors.
+  license:
+    name: Proprietary
+    url: https://denselink.local/license
+  x-domain: den
+  x-product: denselink
+servers:
+  - url: https://api.denselink.local
+    description: Local / product API
+security:
+  - apiKey: []
+tags:
+  - name: DensityModels
+    description: City and venue penetration modelling
+  - name: Piggyback
+    description: Regional piggyback discovery
+paths:
+  /v1/density-models:
+    get:
+      operationId: listDensityModels
+      tags: [DensityModels]
+      summary: List saved density model scenarios
+      parameters:
+        - $ref: ./common/parameters.yaml#/components/parameters/Cursor
+        - $ref: ./common/parameters.yaml#/components/parameters/Limit
+      responses:
+        '200':
+          description: Density models page
+          content:
+            application/json:
+              schema:
+                $ref: ./density.schemas.yaml#/components/schemas/DensityModelListResponse
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+    post:
+      operationId: runDensityModel
+      tags: [DensityModels]
+      summary: Run and save a density model scenario
+      parameters:
+        - $ref: ./common/parameters.yaml#/components/parameters/IdempotencyKey
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: ./density.schemas.yaml#/components/schemas/DensityModelRequest
+      responses:
+        '200':
+          description: Model output
+          content:
+            application/json:
+              schema:
+                $ref: ./density.schemas.yaml#/components/schemas/DensityModelResponse
+        '400':
+          $ref: ./common/responses.yaml#/components/responses/BadRequest
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+
+  /v1/density-models/{densityModelId}:
+    parameters:
+      - name: densityModelId
+        in: path
+        required: true
+        schema:
+          $ref: ./common/primitives.yaml#/components/schemas/DensityModelId
+    get:
+      operationId: getDensityModel
+      tags: [DensityModels]
+      summary: Get a saved density model
+      responses:
+        '200':
+          description: Density model
+          content:
+            application/json:
+              schema:
+                $ref: ./density.schemas.yaml#/components/schemas/DensityModelResponse
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        '404':
+          $ref: ./common/responses.yaml#/components/responses/NotFound
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+
+  /v1/piggyback:
+    get:
+      operationId: listPiggybackRegions
+      tags: [Piggyback]
+      summary: Discover regions with existing mesh density contributors
+      parameters:
+        - $ref: ./common/parameters.yaml#/components/parameters/Cursor
+        - $ref: ./common/parameters.yaml#/components/parameters/Limit
+        - name: region
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Piggyback regions
+          content:
+            application/json:
+              schema:
+                $ref: ./density.schemas.yaml#/components/schemas/PiggybackListResponse
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+
+components:
+  securitySchemes:
+    apiKey:
+      $ref: ./common/security.yaml#/components/securitySchemes/apiKey

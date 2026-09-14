@@ -1,0 +1,81 @@
+{
+  "name": "@denselink/core",
+  "version": "0.1.0",
+  "description": "Core types, repository contracts, and shared utilities for DDD Codegen Starter",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./_shared": {
+      "types": "./dist/_shared/index.d.ts",
+      "import": "./dist/_shared/index.js",
+      "default": "./dist/_shared/index.js"
+    },
+    "./_shared/helpers": {
+      "types": "./dist/_shared/helpers/index.d.ts",
+      "import": "./dist/_shared/helpers/index.js",
+      "default": "./dist/_shared/helpers/index.js"
+    },
+    "./_shared/repositories": {
+      "types": "./dist/_shared/repositories/index.d.ts",
+      "import": "./dist/_shared/repositories/index.js",
+      "default": "./dist/_shared/repositories/index.js"
+    },
+    "./_shared/types": {
+      "types": "./dist/_shared/types/index.d.ts",
+      "import": "./dist/_shared/types/index.js",
+      "default": "./dist/_shared/types/index.js"
+    },
+    "./_shared/events": {
+      "types": "./dist/_shared/events/index.d.ts",
+      "import": "./dist/_shared/events/index.js",
+      "default": "./dist/_shared/events/index.js"
+    },
+    "./_shared/events/*": {
+      "types": "./dist/_shared/events/*.d.ts",
+      "import": "./dist/_shared/events/*.js",
+      "default": "./dist/_shared/events/*.js"
+    },
+    "./_shared/helpers/*": {
+      "types": "./dist/_shared/helpers/*.d.ts",
+      "import": "./dist/_shared/helpers/*.js",
+      "default": "./dist/_shared/helpers/*.js"
+    },
+    "./*": {
+      "types": "./dist/*/index.d.ts",
+      "import": "./dist/*/index.js",
+      "default": "./dist/*/index.js"
+    },
+    "./*/*": {
+      "types": "./dist/*/*.d.ts",
+      "import": "./dist/*/*.js",
+      "default": "./dist/*/*.js"
+    },
+    "./*/index": {
+      "types": "./dist/*/index.d.ts",
+      "import": "./dist/*/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@zodios/core": "^10.9.6",
+    "zod": "^3.23.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

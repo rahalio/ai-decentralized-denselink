@@ -1,0 +1,36 @@
+{
+  "name": "denselink",
+  "version": "0.1.0",
+  "description": "Denselink \u2014 mesh developer density console (OpenAPI-first DDD)",
+  "private": true,
+  "packageManager": "pnpm@10.0.0",
+  "scripts": {
+    "lint": "eslint .",
+    "lint:openapi": "pnpm --filter @denselink/openapi-core lint:domains",
+    "bundle:openapi": "pnpm --filter @denselink/openapi-core bundle:domains",
+    "build": "pnpm --filter @denselink/core build && pnpm --filter @denselink/services build && pnpm --filter @denselink/adapters build && pnpm --filter @denselink/api-server build",
+    "dev:api": "pnpm --filter @denselink/api-server dev",
+    "codegen:core": "node scripts/sync-codegen-paths.mjs && PYTHONPATH=.codegen/codegen/src python3 -m zero_codegen.cli.main generate --all --layers core --config .codegen/.zero-codegen-merged.json --skip-build",
+    "codegen:identity": "node scripts/sync-codegen-paths.mjs && PYTHONPATH=.codegen/codegen/src python3 -m zero_codegen.cli.main generate --domain identity --config .codegen/.zero-codegen-merged.json --skip-build",
+    "codegen:paths": "node scripts/sync-codegen-paths.mjs",
+    "dev:web": "pnpm --filter @denselink/webapp dev",
+    "build:web": "pnpm --filter @denselink/webapp build"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.0.0",
+    "@types/node": "^20.0.0",
+    "eslint": "^9.0.0",
+    "prettier": "^3.8.1",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.55.0"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild"
+    ]
+  },
+  "engines": {
+    "node": ">=20",
+    "pnpm": ">=9.0.0"
+  }
+}

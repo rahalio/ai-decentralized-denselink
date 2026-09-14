@@ -1,0 +1,153 @@
+extends: ["spectral:oas"]
+
+rules:
+  # ===============================================================
+  # BASELINE OPENAPI RULES (from your current file)
+  # ===============================================================
+  info-contact: warn
+  info-description: warn
+  info-license: off
+  license-url: off
+  contact-properties: off
+  tag-description: warn
+  operation-description: warn
+  operation-operationId: warn
+  operation-tags: warn
+  operation-tag-defined: error
+  # no-unused-components: off
+
+  # Path rules
+  path-params: error
+  no-$ref-siblings: error
+
+  # Schema rules
+  oas3-schema: error
+  oas3-unused-component: warn
+
+  # Example rules
+  oas3-valid-media-example: warn
+  oas3-valid-schema-example: warn
+
+  # ===============================================================
+  # VIRIAL-AI GOVERNANCE EXTENSION
+  # ===============================================================
+
+  aipoio-openapi-version:
+    description: "All Aipoio specs must use OpenAPI 3.1.0."
+    severity: error
+    given: $.openapi
+    then:
+      function: pattern
+      functionOptions:
+        match: "^3\\.1\\.0$"
+
+  aipoio-info-license:
+    description: "Every spec must declare Proprietary license information."
+    severity: error
+    given: $.info
+    then:
+      field: license.name
+      function: pattern
+      functionOptions:
+        match: "Proprietary"
+
+  aipoio-required-responses:
+    description: "Each operation must include standard responses (200, 400, 401, 403, 500)."
+    severity: error
+    given: "$.paths[*][get,post,put,patch,delete,options,head,trace]"
+    then:
+      function: schema
+      functionOptions:
+        schema:
+          type: object
+          required: ["responses"]
+          properties:
+            responses:
+              type: object
+              required:
+                - "400"
+                - "401"
+                - "403"
+                - "500"
+
+  aipoio-success-response:
+    description: "Each operation must include at least one success response (200, 201, 202, or 204)."
+    severity: error
+    given: "$.paths[*][get,post,put,patch,delete,options,head,trace]"
+    then:
+      function: schema
+      functionOptions:
+        schema:
+          type: object
+          required: ["responses"]
+          properties:
+            responses:
+              type: object
+              anyOf:
+                - required: ["200"]
+                - required: ["201"]
+                - required: ["202"]
+                - required: ["204"]
+
+  aipoio-response-references:
+    description: "All responses must reference centralized definitions in ./common/responses.yaml."
+    severity: warn
+    given: "$.paths[*][*].responses.*.$ref"
+    then:
+      function: pattern
+      functionOptions:
+        match: "^\\.\\/common\\/responses\\.yaml#\\/components\\/responses\\/"
+
+  aipoio-problem-schema-reference:
+    description: "No endpoint should directly reference ./common/errors.yaml; must go through responses.yaml."
+    severity: error
+    given: "$.paths[*][*].responses.*.$ref"
+    then:
+      function: pattern
+      functionOptions:
+        notMatch: "^\\.\\/common\\/errors\\.yaml"
+
+  aipoio-success-content-type:
+    description: "Success responses must use application/json or compatible types."
+    severity: warn
+    given: "$.paths[*][*].responses[?(@property === '200' || @property === '201' || @property === '202')].content"
+    then:
+      field: "@key"
+      function: pattern
+      functionOptions:
+        match: "^(application/json|application/pdf|text/csv)?$"
+
+  aipoio-error-content-type:
+    description: "Error responses must return application/json with Problem schema."
+    severity: warn
+    given: "$.paths[*][*].responses[?(@property >= '400')].content"
+    then:
+      field: "application/json.schema.$ref"
+      function: pattern
+      functionOptions:
+        match: "^\\.\\/common\\/errors\\.yaml#\\/components\\/schemas\\/Problem"
+
+  aipoio-summary-style:
+    description: "Summaries must start capitalized and end without punctuation."
+    severity: warn
+    given: "$.paths[*][*].summary"
+    then:
+      function: pattern
+      functionOptions:
+        match: "^[A-Z][^.!?]{5,60}[^.!?]$"
+
+  aipoio-operation-id:
+    description: "Every operation must have a unique operationId."
+    severity: error
+    given: "$.paths[*][get,post,put,patch,delete,options,head,trace]"
+    then:
+      field: operationId
+      function: truthy
+
+  aipoio-tagging:
+    description: "Every operation must be tagged under a defined domain."
+    severity: warn
+    given: "$.paths[*][get,post,put,patch,delete,options,head,trace]"
+    then:
+      field: tags
+      function: defined

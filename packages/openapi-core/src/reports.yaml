@@ -1,0 +1,119 @@
+openapi: 3.1.0
+info:
+  title: Denselink Reports API
+  version: 0.1.0
+  description: |
+    Developer contribution ranks, beta cohort status, density exports,
+    and venue sponsor ROI packs.
+  license:
+    name: Proprietary
+    url: https://denselink.local/license
+  x-domain: rpt
+  x-product: denselink
+servers:
+  - url: https://api.denselink.local
+    description: Local / product API
+security:
+  - apiKey: []
+tags:
+  - name: Reporting
+    description: Developer contribution and coverage exports
+paths:
+  /v1/reports/density:
+    get:
+      operationId: getDensityReport
+      tags: [Reporting]
+      summary: Density and heatmap summary for a city or app
+      parameters:
+        - name: city
+          in: query
+          schema:
+            type: string
+        - name: appId
+          in: query
+          schema:
+            $ref: ./common/primitives.yaml#/components/schemas/AppId
+      responses:
+        '200':
+          description: Density report
+          content:
+            application/json:
+              schema:
+                $ref: ./reports.schemas.yaml#/components/schemas/DensityReportResponse
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+
+  /v1/reports/contribution-rank:
+    get:
+      operationId: getContributionRank
+      tags: [Reporting]
+      summary: Rank projects by density contribution
+      parameters:
+        - $ref: ./common/parameters.yaml#/components/parameters/Cursor
+        - $ref: ./common/parameters.yaml#/components/parameters/Limit
+        - name: city
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Contribution ranks
+          content:
+            application/json:
+              schema:
+                $ref: ./reports.schemas.yaml#/components/schemas/ContributionRankListResponse
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+
+  /v1/reports/beta-cohort:
+    get:
+      operationId: getBetaCohort
+      tags: [Reporting]
+      summary: Private-beta cohort readiness summary
+      responses:
+        '200':
+          description: Beta cohort summary
+          content:
+            application/json:
+              schema:
+                $ref: ./reports.schemas.yaml#/components/schemas/BetaCohortResponse
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+
+  /v1/reports/sponsor-roi:
+    get:
+      operationId: getSponsorRoiReport
+      tags: [Reporting]
+      summary: Venue sponsor ROI / coverage pack
+      parameters:
+        - name: venueProgrammeId
+          in: query
+          required: true
+          schema:
+            $ref: ./common/primitives.yaml#/components/schemas/VenueProgrammeId
+      responses:
+        '200':
+          description: Sponsor ROI report
+          content:
+            application/json:
+              schema:
+                $ref: ./reports.schemas.yaml#/components/schemas/SponsorRoiReportResponse
+        '400':
+          $ref: ./common/responses.yaml#/components/responses/BadRequest
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        '404':
+          $ref: ./common/responses.yaml#/components/responses/NotFound
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+
+components:
+  securitySchemes:
+    apiKey:
+      $ref: ./common/security.yaml#/components/securitySchemes/apiKey

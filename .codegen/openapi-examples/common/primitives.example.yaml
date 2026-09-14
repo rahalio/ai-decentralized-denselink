@@ -1,0 +1,315 @@
+openapi: 3.1.0
+info:
+  title: Aipoio - Primitive Types
+  version: 2.0.0
+  description: Atomic IDs, enums, and primitive value objects used across all Aipoio services
+  license:
+    name: Proprietary
+    url: https://ddd-codegen-starter.local/license
+
+servers:
+  - url: https://api.ddd-codegen-starter.local
+    description: Placeholder (this file contains only reusable components)
+
+paths: {}
+
+components:
+  schemas:
+    AccountId:
+      type: string
+      description: "Account identifier (prefixed ULID)
+
+
+        Format: `acc_` + 26-character base32 ULID
+
+        - Length: 30 characters
+
+        - Sortable: Lexicographically ordered by creation time
+
+        - URL-safe: No encoding needed
+
+        "
+      pattern: ^acc_[0-9A-HJKMNP-TV-Z]{26}$
+      example: ID_01HQZX3K8PQRS7VN6M9TW1ABJR
+    OrgId:
+      type: string
+      description: "Organization identifier (prefixed ULID)
+
+
+        Format: `org_` + 26-character base32 ULID
+
+        - Length: 30 characters
+
+        - Sortable: Lexicographically ordered by creation time
+
+        - URL-safe: No encoding needed
+
+        - Human-recognizable: Prefix indicates entity type
+
+        "
+      pattern: ^ID_[0-9A-HJKMNP-TV-Z]{26}$
+      example: ID_01HQZX3K8PQRS7VN6M9TW1ABJY
+    EscrowAccountId:
+      type: string
+      description: "Escrow account identifier (prefixed ULID)
+
+
+        Shared by: Treasury, Escrow services
+
+        Format: `esc_` + 26-character base32 ULID
+
+        "
+      pattern: ^esc_[0-9A-HJKMNP-TV-Z]{26}$
+      example: ES_01HQZX3K8PQRS7VN6M9TW1ABJZ
+    ChainId:
+      type: string
+      description: "Chain identifier (prefixed ULID)
+
+
+        Shared by: Chain, Custodian services
+
+        Format: `chn_` + 26-character base32 ULID
+
+        "
+      pattern: ^chn_[0-9A-HJKMNP-TV-Z]{26}$
+      example: BL_01HQZX3K8PQRS7VN6M9TW1ABJZ
+    WalletId:
+      type: string
+      description: "Wallet identifier (prefixed ULID)
+
+
+        Shared by: Chain, Custodian services
+
+        Format: `wlt_` + 26-character base32 ULID
+
+        "
+      pattern: ^wlt_[0-9A-HJKMNP-TV-Z]{26}$
+      example: BL_01HQZX3K8PQRS7VN6M9TW1ABJZ
+    OfferingId:
+      type: string
+      description: "Offering identifier (prefixed ULID)
+
+
+        Shared by: Primary Market, Marketplace services
+
+        Format: `ofr_` + 26-character base32 ULID
+
+        "
+      pattern: ^ofr_[0-9A-HJKMNP-TV-Z]{26}$
+      example: PM_01HQZX3K8PQRS7VN6M9TW1ABJZ
+    SubscriptionId:
+      type: string
+      description: "Subscription identifier (prefixed ULID)
+
+
+        Shared by: Primary Market, Marketplace services
+
+        Format: `sub_` + 26-character base32 ULID
+
+        "
+      pattern: ^sub_[0-9A-HJKMNP-TV-Z]{26}$
+      example: PM_01HQZX3K8PQRS7VN6M9TW1ABJZ
+    AccountType:
+      type: string
+      enum:
+        - INDIVIDUAL
+        - ENTITY
+        - ADMIN
+        - SERVICE
+      description: "Account classification:
+
+        - INDIVIDUAL: Natural person
+
+        - ENTITY: Legal entity/organization
+
+        - ADMIN: Platform administrator
+
+        - SERVICE: Service account for API access
+
+        "
+    AccountStatus:
+      type: string
+      enum:
+        - ACTIVE
+        - INACTIVE
+        - SUSPENDED
+        - PENDING_VERIFICATION
+        - CLOSED
+      description: Current status of an account
+    ApiKeyStatus:
+      type: string
+      enum:
+        - ACTIVE
+        - REVOKED
+        - EXPIRED
+      description: API key lifecycle status
+    OrgStatus:
+      type: string
+      enum:
+        - ACTIVE
+        - SUSPENDED
+        - CLOSED
+      description: Organization status
+    ProjectType:
+      type: string
+      enum:
+        - REAL_ESTATE
+        - RENEWABLE_ENERGY
+        - INFRASTRUCTURE
+        - PRIVATE_EQUITY
+        - VENTURE_CAPITAL
+        - CREDIT
+        - OTHER
+      description: Project asset class or category
+    ProjectStatus:
+      type: string
+      enum:
+        - DRAFT
+        - ACTIVE
+        - CLOSED
+      description: Project lifecycle status
+    TokenStandard:
+      type: string
+      enum:
+        - ERC20
+        - ERC1400
+        - ERC721
+        - ERC1155
+        - SPL_TOKEN
+      description: Blockchain token standard
+    Rights:
+      type: object
+      description: Token holder rights and entitlements
+      properties:
+        voting:
+          type: boolean
+          description: Voting rights on corporate actions
+        dividends:
+          type: boolean
+          description: Dividend/distribution rights
+        liquidation:
+          type: boolean
+          description: Liquidation preference rights
+        information:
+          type: boolean
+          description: Information rights
+        redemption:
+          type: boolean
+          description: Redemption rights
+    Tranche:
+      type: string
+      enum:
+        - SENIOR
+        - MEZZANINE
+        - JUNIOR
+        - EQUITY
+        - COMMON
+        - PREFERRED
+      description: Investment tranche or seniority level
+    PayDirection:
+      type: string
+      enum:
+        - INBOUND
+        - OUTBOUND
+      description: Payment direction (into or out of the platform)
+    PayStatus:
+      type: string
+      enum:
+        - PENDING
+        - PROCESSING
+        - COMPLETED
+        - FAILED
+        - CANCELLED
+        - REVERSED
+      description: Payment processing status
+    PayMethod:
+      type: string
+      enum:
+        - BANK_WIRE
+        - ACH
+        - SEPA
+        - CRYPTO
+        - CARD
+        - WALLET
+      description: Payment method/channel
+    CorporateActionType:
+      type: string
+      enum:
+        - DIVIDEND
+        - SPLIT
+        - REVERSE_SPLIT
+        - MERGER
+        - ACQUISITION
+        - CONVERSION
+        - BUYBACK
+        - RIGHTS_ISSUE
+      description: Type of corporate action
+    OfferingStatus:
+      type: string
+      enum:
+        - DRAFT
+        - LIVE
+        - PAUSED
+        - CLOSED
+      description: Offering lifecycle status
+    SubscriptionStatus:
+      type: string
+      enum:
+        - DRAFT
+        - PENDING_PAYMENT
+        - PAID
+        - ALLOCATED
+        - REFUNDED
+        - CANCELLED
+      description: Subscription processing status
+    MilestoneStatus:
+      type: string
+      enum:
+        - PENDING
+        - IN_PROGRESS
+        - COMPLETED
+        - DELAYED
+        - CANCELLED
+      description: Project milestone status
+    DistributionStatus:
+      type: string
+      enum:
+        - SCHEDULED
+        - PROCESSING
+        - COMPLETED
+        - CANCELLED
+      description: Distribution processing status
+    Locale:
+      type: string
+      enum:
+        - en
+        - ar
+        - fr
+      description: Supported locales
+    Timestamp:
+      type: string
+      format: date-time
+      description: RFC3339 timestamp in UTC (Zulu) unless explicitly stated otherwise
+      example: "2025-10-22T10:30:00Z"
+    NullableTimestamp:
+      oneOf:
+        - $ref: "#/components/schemas/Timestamp"
+        - type: "null"
+      description: Optional timestamp (RFC3339 in UTC or null)
+    Currency:
+      type: string
+      description: ISO 4217 currency code
+      example: USD
+      pattern: ^[A-Z]{3}$
+    Amount:
+      type: number
+      format: double
+      description: Monetary amount (use with Currency)
+      example: 1000.5
+    Percentage:
+      type: number
+      format: double
+      minimum: 0
+      maximum: 100
+      description: Percentage value (0-100)
+      example: 5.25

@@ -1,0 +1,107 @@
+{
+  "domains": [
+    {
+      "name": "identity",
+      "enabled": true,
+      "spec_path": "identity.yaml",
+      "bundled_path": "identity.json"
+    },
+    {
+      "name": "meshports",
+      "enabled": true,
+      "spec_path": "meshports.yaml",
+      "bundled_path": "meshports.json"
+    },
+    {
+      "name": "licenses",
+      "enabled": true,
+      "spec_path": "licenses.yaml",
+      "bundled_path": "licenses.json"
+    },
+    {
+      "name": "density",
+      "enabled": true,
+      "spec_path": "density.yaml",
+      "bundled_path": "density.json"
+    },
+    {
+      "name": "venues",
+      "enabled": true,
+      "spec_path": "venues.yaml",
+      "bundled_path": "venues.json"
+    },
+    {
+      "name": "grants",
+      "enabled": true,
+      "spec_path": "grants.yaml",
+      "bundled_path": "grants.json"
+    },
+    {
+      "name": "telemetry",
+      "enabled": true,
+      "spec_path": "telemetry.yaml",
+      "bundled_path": "telemetry.json"
+    },
+    {
+      "name": "reports",
+      "enabled": true,
+      "spec_path": "reports.yaml",
+      "bundled_path": "reports.json"
+    }
+  ],
+  "paths": {
+    "project_root": ".",
+    "openapi_dir": "packages/openapi-core/src",
+    "bundled_dir": "packages/openapi-core/src/.bundled",
+    "output": {
+      "core": {
+        "base": "packages/core/src",
+        "imports": {
+          "types": "@denselink/core",
+          "repositories": "@denselink/core",
+          "handlers": "@denselink/core",
+          "schemas": "@denselink/core",
+          "validators": "@denselink/core",
+          "converters": "@denselink/core",
+          "shared_helpers": "@denselink/core/_shared/helpers",
+          "shared_repositories": "@denselink/core/_shared/repositories",
+          "shared_types": "@denselink/core/_shared/types"
+        }
+      },
+      "services": {
+        "base": "platform/services/src",
+        "imports": {
+          "types": "@denselink/core",
+          "repositories": "@denselink/core",
+          "handlers": "@denselink/core",
+          "schemas": "@denselink/core",
+          "validators": "@denselink/core",
+          "converters": "@denselink/core",
+          "shared_helpers": "@denselink/core/_shared/helpers",
+          "shared_repositories": "@denselink/core/_shared/repositories",
+          "shared_types": "@denselink/core/_shared/types"
+        }
+      },
+      "adapters": {
+        "base": "platform/adapters/src",
+        "imports": {
+          "types": "@denselink/core",
+          "repositories": "@denselink/core",
+          "handlers": "@denselink/core",
+          "schemas": "@denselink/core",
+          "validators": "@denselink/core",
+          "converters": "@denselink/core",
+          "shared_helpers": "@denselink/core/_shared/helpers",
+          "shared_repositories": "@denselink/core/_shared/repositories",
+          "shared_types": "@denselink/core/_shared/types"
+        }
+      },
+      "api_server": {
+        "base": "platform/api-server/src/domains"
+      }
+    }
+  },
+  "package_name": "@denselink/core",
+  "package_scope": "@denselink",
+  "version": "2.0.0"
+}

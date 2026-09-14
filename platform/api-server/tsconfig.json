@@ -1,0 +1,32 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "moduleResolution": "Bundler",
+    "lib": ["ES2022"],
+    "rootDir": "../..",
+    "outDir": "dist",
+    "noEmit": true,
+    "declaration": false,
+    "strict": true,
+    "skipLibCheck": true,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "baseUrl": ".",
+    "paths": {
+      "@denselink/core": ["../../packages/core/src/index.ts"],
+      "@denselink/core/*": ["../../packages/core/src/*"],
+      "@denselink/services": ["../services/src/index.ts"],
+      "@denselink/services/*": ["../services/src/*"],
+      "@denselink/adapters": ["../adapters/src/index.ts"],
+      "@denselink/adapters/*": ["../adapters/src/*"],
+      "@services/*": ["../services/src/*"],
+      "@adapters/*": ["../adapters/src/*"],
+      "@api/*": ["./src/*"]
+    }
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": ["node_modules", "dist", "**/*.test.ts", "**/*.spec.ts"]
+}

@@ -1,0 +1,159 @@
+openapi: 3.1.0
+info:
+  title: Denselink Grants API
+  version: 0.1.0
+  description: |
+    Incentive grants tied to measured density milestones (not install counts).
+  license:
+    name: Proprietary
+    url: https://denselink.local/license
+  x-domain: grt
+  x-product: denselink
+servers:
+  - url: https://api.denselink.local
+    description: Local / product API
+security:
+  - apiKey: []
+tags:
+  - name: Grants
+    description: Density milestone grants and staking incentives
+  - name: Milestones
+    description: Milestone review and disbursement
+paths:
+  /v1/grants:
+    get:
+      operationId: listGrantProgrammes
+      tags: [Grants]
+      summary: List grant programmes
+      parameters:
+        - $ref: ./common/parameters.yaml#/components/parameters/Cursor
+        - $ref: ./common/parameters.yaml#/components/parameters/Limit
+      responses:
+        '200':
+          description: Grant programmes
+          content:
+            application/json:
+              schema:
+                $ref: ./grants.schemas.yaml#/components/schemas/GrantProgrammeListResponse
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+    post:
+      operationId: createGrantProgramme
+      tags: [Grants]
+      summary: Create a density milestone grant programme
+      parameters:
+        - $ref: ./common/parameters.yaml#/components/parameters/IdempotencyKey
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: ./grants.schemas.yaml#/components/schemas/GrantProgrammeCreate
+      responses:
+        '201':
+          description: Grant programme created
+          content:
+            application/json:
+              schema:
+                $ref: ./grants.schemas.yaml#/components/schemas/GrantProgrammeResponse
+        '400':
+          $ref: ./common/responses.yaml#/components/responses/BadRequest
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+
+  /v1/grants/{grantProgrammeId}:
+    parameters:
+      - name: grantProgrammeId
+        in: path
+        required: true
+        schema:
+          $ref: ./common/primitives.yaml#/components/schemas/GrantProgrammeId
+    get:
+      operationId: getGrantProgramme
+      tags: [Grants]
+      summary: Get a grant programme
+      responses:
+        '200':
+          description: Grant programme
+          content:
+            application/json:
+              schema:
+                $ref: ./grants.schemas.yaml#/components/schemas/GrantProgrammeResponse
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        '404':
+          $ref: ./common/responses.yaml#/components/responses/NotFound
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+
+  /v1/grants/{grantProgrammeId}/milestones:
+    parameters:
+      - name: grantProgrammeId
+        in: path
+        required: true
+        schema:
+          $ref: ./common/primitives.yaml#/components/schemas/GrantProgrammeId
+    get:
+      operationId: listGrantMilestones
+      tags: [Milestones]
+      summary: List milestones for a grant programme
+      parameters:
+        - $ref: ./common/parameters.yaml#/components/parameters/Cursor
+        - $ref: ./common/parameters.yaml#/components/parameters/Limit
+      responses:
+        '200':
+          description: Milestones
+          content:
+            application/json:
+              schema:
+                $ref: ./grants.schemas.yaml#/components/schemas/MilestoneListResponse
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        '404':
+          $ref: ./common/responses.yaml#/components/responses/NotFound
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+
+  /v1/milestones/{milestoneId}/disburse:
+    parameters:
+      - name: milestoneId
+        in: path
+        required: true
+        schema:
+          $ref: ./common/primitives.yaml#/components/schemas/MilestoneId
+    post:
+      operationId: disburseMilestone
+      tags: [Milestones]
+      summary: Admin review and disburse a density milestone grant
+      parameters:
+        - $ref: ./common/parameters.yaml#/components/parameters/IdempotencyKey
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: ./grants.schemas.yaml#/components/schemas/MilestoneDisburse
+      responses:
+        '200':
+          description: Milestone disbursed
+          content:
+            application/json:
+              schema:
+                $ref: ./grants.schemas.yaml#/components/schemas/MilestoneResponse
+        '400':
+          $ref: ./common/responses.yaml#/components/responses/BadRequest
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        '404':
+          $ref: ./common/responses.yaml#/components/responses/NotFound
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+
+components:
+  securitySchemes:
+    apiKey:
+      $ref: ./common/security.yaml#/components/securitySchemes/apiKey

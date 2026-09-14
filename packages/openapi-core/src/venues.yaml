@@ -1,0 +1,147 @@
+openapi: 3.1.0
+info:
+  title: Denselink Venues API
+  version: 0.1.0
+  description: |
+    Stadium/school/mall venue wedge programmes and Flare-style always-on
+    node campaigns that do not inflate consumer UX metrics.
+  license:
+    name: Proprietary
+    url: https://denselink.local/license
+  x-domain: ven
+  x-product: denselink
+servers:
+  - url: https://api.denselink.local
+    description: Local / product API
+security:
+  - apiKey: []
+tags:
+  - name: Venues
+    description: Stadium, school, and mall wedge programmes
+  - name: AlwaysOnCampaigns
+    description: Always-on node campaigns
+paths:
+  /v1/venues:
+    get:
+      operationId: listVenueProgrammes
+      tags: [Venues]
+      summary: List venue programmes
+      parameters:
+        - $ref: ./common/parameters.yaml#/components/parameters/Cursor
+        - $ref: ./common/parameters.yaml#/components/parameters/Limit
+        - name: venueType
+          in: query
+          schema:
+            type: string
+            enum: [stadium, school, mall]
+      responses:
+        '200':
+          description: Venue programmes
+          content:
+            application/json:
+              schema:
+                $ref: ./venues.schemas.yaml#/components/schemas/VenueProgrammeListResponse
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+    post:
+      operationId: createVenueProgramme
+      tags: [Venues]
+      summary: Create a venue programme
+      parameters:
+        - $ref: ./common/parameters.yaml#/components/parameters/IdempotencyKey
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: ./venues.schemas.yaml#/components/schemas/VenueProgrammeCreate
+      responses:
+        '201':
+          description: Venue programme created
+          content:
+            application/json:
+              schema:
+                $ref: ./venues.schemas.yaml#/components/schemas/VenueProgrammeResponse
+        '400':
+          $ref: ./common/responses.yaml#/components/responses/BadRequest
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+
+  /v1/venues/{venueProgrammeId}:
+    parameters:
+      - name: venueProgrammeId
+        in: path
+        required: true
+        schema:
+          $ref: ./common/primitives.yaml#/components/schemas/VenueProgrammeId
+    get:
+      operationId: getVenueProgramme
+      tags: [Venues]
+      summary: Get a venue programme (event board)
+      responses:
+        '200':
+          description: Venue programme
+          content:
+            application/json:
+              schema:
+                $ref: ./venues.schemas.yaml#/components/schemas/VenueProgrammeResponse
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        '404':
+          $ref: ./common/responses.yaml#/components/responses/NotFound
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+
+  /v1/always-on-campaigns:
+    get:
+      operationId: listAlwaysOnCampaigns
+      tags: [AlwaysOnCampaigns]
+      summary: List always-on node campaigns
+      parameters:
+        - $ref: ./common/parameters.yaml#/components/parameters/Cursor
+        - $ref: ./common/parameters.yaml#/components/parameters/Limit
+      responses:
+        '200':
+          description: Campaigns
+          content:
+            application/json:
+              schema:
+                $ref: ./venues.schemas.yaml#/components/schemas/AlwaysOnCampaignListResponse
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+    post:
+      operationId: createAlwaysOnCampaign
+      tags: [AlwaysOnCampaigns]
+      summary: Create an always-on campaign (no consumer metric inflation)
+      parameters:
+        - $ref: ./common/parameters.yaml#/components/parameters/IdempotencyKey
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: ./venues.schemas.yaml#/components/schemas/AlwaysOnCampaignCreate
+      responses:
+        '201':
+          description: Campaign created
+          content:
+            application/json:
+              schema:
+                $ref: ./venues.schemas.yaml#/components/schemas/AlwaysOnCampaignResponse
+        '400':
+          $ref: ./common/responses.yaml#/components/responses/BadRequest
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+
+components:
+  securitySchemes:
+    apiKey:
+      $ref: ./common/security.yaml#/components/securitySchemes/apiKey

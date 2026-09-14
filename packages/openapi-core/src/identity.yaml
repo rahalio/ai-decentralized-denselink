@@ -1,0 +1,387 @@
+openapi: 3.1.0
+info:
+  title: Identity API (shared blueprint)
+  version: 0.1.0
+  description: |
+    Machine API-key lifecycle + sandbox operator users for tenants +
+    optional operator auth stubs.
+
+    - Primary auth for product APIs remains `X-API-Key` (tenant implied).
+    - Users: create/list/get/update/disable/enable — no invite tokens or SSO.
+    - External IdP / KYC / wallets are **out of scope** for this starter.
+  license:
+    name: Proprietary
+    url: https://denselink.local/license
+  x-domain: idn
+servers:
+  - url: https://api.denselink.local
+    description: Local / starter API
+security:
+  - apiKey: []
+tags:
+  - name: ApiKeys
+    description: Tenant API key management
+  - name: Users
+    description: Tenant operator users (sandbox CRUD; soft RBAC roles)
+  - name: Auth
+    description: Optional operator session stubs (x-maturity stub)
+paths:
+  /v0/tenants/me/api-keys:
+    get:
+      operationId: listTenantApiKeys
+      tags: [ApiKeys]
+      summary: List API keys for the current tenant
+      responses:
+        '200':
+          description: API keys (secrets never included)
+          content:
+            application/json:
+              schema:
+                $ref: ./identity.schemas.yaml#/components/schemas/ApiKeyListResponse
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+    post:
+      operationId: createTenantApiKey
+      tags: [ApiKeys]
+      summary: Create an API key (secret returned once)
+      parameters:
+        - $ref: ./common/parameters.yaml#/components/parameters/IdempotencyKey
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: ./identity.schemas.yaml#/components/schemas/ApiKeyCreateRequest
+      responses:
+        '201':
+          description: API key created
+          content:
+            application/json:
+              schema:
+                $ref: ./identity.schemas.yaml#/components/schemas/ApiKeyCreatedResponse
+        '400':
+          $ref: ./common/responses.yaml#/components/responses/BadRequest
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        '409':
+          $ref: ./common/responses.yaml#/components/responses/Conflict
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+
+  /v0/tenants/me/api-keys/{keyId}:
+    get:
+      operationId: getTenantApiKey
+      tags: [ApiKeys]
+      summary: Get API key metadata
+      parameters:
+        - name: keyId
+          in: path
+          required: true
+          schema:
+            $ref: ./identity.schemas.yaml#/components/schemas/ApiKeyId
+      responses:
+        '200':
+          description: API key metadata
+          content:
+            application/json:
+              schema:
+                $ref: ./identity.schemas.yaml#/components/schemas/ApiKeyResponse
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        '404':
+          $ref: ./common/responses.yaml#/components/responses/NotFound
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+    delete:
+      operationId: revokeTenantApiKey
+      tags: [ApiKeys]
+      summary: Revoke an API key
+      parameters:
+        - name: keyId
+          in: path
+          required: true
+          schema:
+            $ref: ./identity.schemas.yaml#/components/schemas/ApiKeyId
+        - $ref: ./common/parameters.yaml#/components/parameters/IdempotencyKey
+      responses:
+        '204':
+          description: Revoked
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        '404':
+          $ref: ./common/responses.yaml#/components/responses/NotFound
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+
+  /v0/tenants/me/users:
+    get:
+      operationId: listTenantUsers
+      tags: [Users]
+      summary: List operator users for the current tenant
+      responses:
+        '200':
+          description: Users (password never included)
+          content:
+            application/json:
+              schema:
+                $ref: ./identity.schemas.yaml#/components/schemas/TenantUserListResponse
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+    post:
+      operationId: createTenantUser
+      tags: [Users]
+      summary: Create an operator user (password set once)
+      parameters:
+        - $ref: ./common/parameters.yaml#/components/parameters/IdempotencyKey
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: ./identity.schemas.yaml#/components/schemas/CreateTenantUserRequest
+      responses:
+        '201':
+          description: User created
+          content:
+            application/json:
+              schema:
+                $ref: ./identity.schemas.yaml#/components/schemas/TenantUserResponse
+        '400':
+          $ref: ./common/responses.yaml#/components/responses/BadRequest
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        '409':
+          $ref: ./common/responses.yaml#/components/responses/Conflict
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+
+  /v0/tenants/me/users/{userId}:
+    get:
+      operationId: getTenantUser
+      tags: [Users]
+      summary: Get operator user metadata
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            $ref: ./common/primitives.yaml#/components/schemas/UserId
+      responses:
+        '200':
+          description: User metadata
+          content:
+            application/json:
+              schema:
+                $ref: ./identity.schemas.yaml#/components/schemas/TenantUserResponse
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        '404':
+          $ref: ./common/responses.yaml#/components/responses/NotFound
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+    patch:
+      operationId: updateTenantUser
+      tags: [Users]
+      summary: Update display name, role, or reset password
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            $ref: ./common/primitives.yaml#/components/schemas/UserId
+        - $ref: ./common/parameters.yaml#/components/parameters/IdempotencyKey
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: ./identity.schemas.yaml#/components/schemas/UpdateTenantUserRequest
+      responses:
+        '200':
+          description: Updated user
+          content:
+            application/json:
+              schema:
+                $ref: ./identity.schemas.yaml#/components/schemas/TenantUserResponse
+        '400':
+          $ref: ./common/responses.yaml#/components/responses/BadRequest
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        '404':
+          $ref: ./common/responses.yaml#/components/responses/NotFound
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+
+  /v0/tenants/me/users/{userId}/disable:
+    post:
+      operationId: disableTenantUser
+      tags: [Users]
+      summary: Disable an operator user
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            $ref: ./common/primitives.yaml#/components/schemas/UserId
+        - $ref: ./common/parameters.yaml#/components/parameters/IdempotencyKey
+      responses:
+        '200':
+          description: User disabled
+          content:
+            application/json:
+              schema:
+                $ref: ./identity.schemas.yaml#/components/schemas/TenantUserResponse
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        '404':
+          $ref: ./common/responses.yaml#/components/responses/NotFound
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+
+  /v0/tenants/me/users/{userId}/enable:
+    post:
+      operationId: enableTenantUser
+      tags: [Users]
+      summary: Re-enable an operator user
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            $ref: ./common/primitives.yaml#/components/schemas/UserId
+        - $ref: ./common/parameters.yaml#/components/parameters/IdempotencyKey
+      responses:
+        '200':
+          description: User enabled
+          content:
+            application/json:
+              schema:
+                $ref: ./identity.schemas.yaml#/components/schemas/TenantUserResponse
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        '404':
+          $ref: ./common/responses.yaml#/components/responses/NotFound
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+
+  /v0/auth/login:
+    post:
+      operationId: operatorLogin
+      tags: [Auth]
+      summary: Operator login (stub)
+      description: Future FI operator UI. Not Nafath. Marked stub. Returns tokens + operator summary.
+      x-maturity: stub
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: ./identity.schemas.yaml#/components/schemas/OperatorLoginRequest
+      responses:
+        '200':
+          description: Tokens issued (stub)
+          content:
+            application/json:
+              schema:
+                $ref: ./identity.schemas.yaml#/components/schemas/AuthTokensResponse
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+
+  /v0/auth/me:
+    get:
+      operationId: getOperatorMe
+      tags: [Auth]
+      summary: Current operator session
+      description: |
+        Signed-in operator for My profile / account dropdown.
+        API-key sessions return a synthetic demo operator.
+      x-zero-ui:
+        label:
+          en: My profile
+          ar: ملفي
+      responses:
+        '200':
+          description: Current session
+          content:
+            application/json:
+              schema:
+                $ref: ./identity.schemas.yaml#/components/schemas/OperatorSessionResponse
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+    patch:
+      operationId: updateOperatorMe
+      tags: [Auth]
+      summary: Update own display name
+      description: Self-service. Email and role cannot be changed here.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: ./identity.schemas.yaml#/components/schemas/UpdateOperatorMeRequest
+      responses:
+        '200':
+          description: Updated session
+          content:
+            application/json:
+              schema:
+                $ref: ./identity.schemas.yaml#/components/schemas/OperatorSessionResponse
+        '400':
+          $ref: ./common/responses.yaml#/components/responses/BadRequest
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+
+  /v0/auth/refresh:
+    post:
+      operationId: operatorRefresh
+      tags: [Auth]
+      summary: Refresh operator tokens (stub)
+      x-maturity: stub
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: ./identity.schemas.yaml#/components/schemas/RefreshTokenRequest
+      responses:
+        '200':
+          description: Tokens refreshed (stub)
+          content:
+            application/json:
+              schema:
+                $ref: ./identity.schemas.yaml#/components/schemas/AuthTokensResponse
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+
+  /v0/auth/logout:
+    post:
+      operationId: operatorLogout
+      tags: [Auth]
+      summary: Operator logout (stub)
+      x-maturity: stub
+      responses:
+        '204':
+          description: Logged out
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+
+components:
+  securitySchemes:
+    apiKey:
+      $ref: ./common/security.yaml#/components/securitySchemes/apiKey

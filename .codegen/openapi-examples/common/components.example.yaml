@@ -1,0 +1,358 @@
+openapi: 3.1.0
+info:
+  title: Aipoio - Shared Components
+  version: 2.0.0
+  description: Shared components, schemas, and security definitions for reuse across all Aipoio APIs
+  license:
+    name: Proprietary
+    url: https://ddd-codegen-starter.local/license
+
+servers:
+  - url: https://api.ddd-codegen-starter.local
+    description: Placeholder (this file contains only reusable components)
+
+paths: {}
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    oauth2:
+      type: oauth2
+      description: OAuth 2.0 authorization with scope-based access control
+      flows:
+        authorizationCode:
+          authorizationUrl: https://auth.ddd-codegen-starter.local/oauth/authorize
+          tokenUrl: https://auth.ddd-codegen-starter.local/oauth/token
+          scopes:
+            read:analytics: Read access to analytics reports
+            write:analytics: Create and update analytics reports
+            read:banking: Read access to banking operations
+            write:banking: Execute banking transactions
+            read:chain: Read access to blockchain operations
+            write:chain: Execute blockchain transactions
+            read:compliance: Read access to compliance data
+            write:compliance: Manage compliance rules and records
+            admin:compliance: Administrative access to compliance operations
+            read:custody: Read access to custodian operations
+            write:custody: Execute custody operations
+            admin:custody: Administrative access to custody
+            read:data: Read access to data services
+            write:data: Create and update data records
+            read:documents: Read access to documents
+            write:documents: Upload and manage documents
+            read:escrow: Read access to escrow accounts
+            write:escrow: Manage escrow operations
+            read:events: Read access to event streams
+            write:events: Publish events
+            read:exchange: Read access to exchange operations
+            write:exchange: Execute exchange trades
+            read:fees: Read access to fees and billing
+            write:fees: Manage fees and billing
+            read:gateway: Read access to gateway status
+            write:gateway: Manage gateway configuration
+            read:governance: Read access to governance proposals
+            write:governance: Create and vote on proposals
+            admin:governance: Administrative access to governance
+            read:identity: Read access to identity data
+            write:identity: Manage identity records
+            read:marketplace: Read access to marketplace listings
+            write:marketplace: Create and manage listings
+            read:notifications: Read access to notifications
+            write:notifications: Send notifications
+            read:observability: Read access to metrics and logs
+            write:observability: Manage observability configuration
+            read:pricing: Read access to pricing data
+            write:pricing: Manage reference data
+            read:primary: Read access to primary market offerings
+            write:primary: Create and manage offerings
+            read:risk: Read access to risk limits
+            write:risk: Manage risk limits
+            admin:risk: Administrative access to risk controls
+            read:sandbox: Read access to sandbox environments
+            write:sandbox: Manage sandbox resources
+            read:settlements: Read access to settlement data
+            write:settlements: Execute settlements
+            read:tenancy: Read access to tenant configuration
+            write:tenancy: Manage tenant settings
+            admin:tenancy: Administrative access to tenant operations
+            read:transfer-agent: Read access to transfer agent operations
+            write:transfer-agent: Execute transfer operations
+            read:treasury: Read access to treasury operations
+            write:treasury: Execute treasury transactions
+            admin:treasury: Administrative access to treasury
+            admin:*: Administrative access to all resources
+        clientCredentials:
+          tokenUrl: https://auth.ddd-codegen-starter.local/oauth/token
+          scopes:
+            read:analytics: Read access to analytics reports
+            write:analytics: Create and update analytics reports
+            read:banking: Read access to banking operations
+            write:banking: Execute banking transactions
+            read:chain: Read access to blockchain operations
+            write:chain: Execute blockchain transactions
+            read:compliance: Read access to compliance data
+            write:compliance: Manage compliance rules and records
+            admin:compliance: Administrative access to compliance operations
+            read:custody: Read access to custodian operations
+            write:custody: Execute custody operations
+            admin:custody: Administrative access to custody
+            read:data: Read access to data services
+            write:data: Create and update data records
+            read:documents: Read access to documents
+            write:documents: Upload and manage documents
+            read:escrow: Read access to escrow accounts
+            write:escrow: Manage escrow operations
+            read:events: Read access to event streams
+            write:events: Publish events
+            read:exchange: Read access to exchange operations
+            write:exchange: Execute exchange trades
+            read:fees: Read access to fees and billing
+            write:fees: Manage fees and billing
+            read:gateway: Read access to gateway status
+            write:gateway: Manage gateway configuration
+            read:governance: Read access to governance proposals
+            write:governance: Create and vote on proposals
+            admin:governance: Administrative access to governance
+            read:identity: Read access to identity data
+            write:identity: Manage identity records
+            read:marketplace: Read access to marketplace listings
+            write:marketplace: Create and manage listings
+            read:notifications: Read access to notifications
+            write:notifications: Send notifications
+            read:observability: Read access to metrics and logs
+            write:observability: Manage observability configuration
+            read:pricing: Read access to pricing data
+            write:pricing: Manage reference data
+            read:primary: Read access to primary market offerings
+            write:primary: Create and manage offerings
+            read:risk: Read access to risk limits
+            write:risk: Manage risk limits
+            admin:risk: Administrative access to risk controls
+            read:sandbox: Read access to sandbox environments
+            write:sandbox: Manage sandbox resources
+            read:settlements: Read access to settlement data
+            write:settlements: Execute settlements
+            read:tenancy: Read access to tenant configuration
+            write:tenancy: Manage tenant settings
+            admin:tenancy: Administrative access to tenant operations
+            read:transfer-agent: Read access to transfer agent operations
+            write:transfer-agent: Execute transfer operations
+            read:treasury: Read access to treasury operations
+            write:treasury: Execute treasury transactions
+            admin:treasury: Administrative access to treasury
+            admin:*: Administrative access to all resources
+    apiKey:
+      type: apiKey
+      in: header
+      name: X-API-KEY
+      description: Org-bound API key; include X-Signature and X-Timestamp on writes.
+    mtls:
+      type: mutualTLS
+      description: Client certificate authentication for T3 institutional trust level
+    clientCertificate:
+      type: mutualTLS
+      description: "(DEPRECATED: Use 'mtls' instead) Client certificate authentication"
+  headers:
+    Request-Id:
+      description: Request correlation ID (UUID or ULID)
+      schema:
+        type: string
+        minLength: 10
+  parameters:
+    orgId:
+      name: orgId
+      in: path
+      required: true
+      schema:
+        $ref: ./primitives.yaml#/components/schemas/OrgId
+
+    accountId:
+      name: accountId
+      in: path
+      required: true
+      schema:
+        $ref: ./primitives.yaml#/components/schemas/AccountId
+    offeringId:
+      name: offeringId
+      in: path
+      required: true
+      schema:
+        $ref: ./primitives.yaml#/components/schemas/OfferingId
+    subscriptionId:
+      name: subscriptionId
+      in: path
+      required: true
+      schema:
+        $ref: ./primitives.yaml#/components/schemas/SubscriptionId
+    sort:
+      name: sort
+      in: query
+      schema:
+        type: string
+      description: Sort expression (e.g., "createdAt:desc").
+    locale:
+      name: locale
+      in: query
+      schema:
+        $ref: ./primitives.yaml#/components/schemas/Locale
+      description: Requested content locale (server may fallback).
+    fromDate:
+      name: fromDate
+      in: query
+      schema:
+        type: string
+        format: date
+    toDate:
+      name: toDate
+      in: query
+      schema:
+        type: string
+        format: date
+
+    accountIdQuery:
+      name: accountId
+      in: query
+      schema:
+        $ref: ./primitives.yaml#/components/schemas/AccountId
+    orgIdHeader:
+      name: X-Org-Id
+      in: header
+      required: false
+      schema:
+        $ref: ./primitives.yaml#/components/schemas/OrgId
+      description: "**Multi-Org User Organization Selection Header**
+
+
+        For users with access to multiple organizations, this header allows
+
+        explicit selection of which organization to operate as.
+
+
+        **Security Model**:
+
+        - Value MUST be present in authenticated user's JWT `orgIds` array
+
+        - Unauthorized org access attempts are logged and rejected (403)
+
+        - If omitted, defaults to primary org (first in `orgIds` array)
+
+
+        **Use Cases**:
+
+        - Enterprise users managing multiple subsidiaries
+
+        - Service accounts with cross-org access
+
+        - Admin tools requiring org switching
+
+
+        **Customer-Facing APIs** (`USE_TOKEN_ORG_ID=true`):
+
+        - orgId derived from JWT token (required)
+
+        - X-Org-Id validated against token `orgIds` (optional override)
+
+        - URL param orgId ignored for security
+
+
+        **Internal Admin APIs** (`USE_TOKEN_ORG_ID=false`):
+
+        - orgId from URL path parameter (required)
+
+        - X-Org-Id optional validation check
+
+
+        See: [API Security Strategy](../docs/API-SECURITY-STRATEGY.md)
+
+        "
+    idempotencyKey:
+      name: Idempotency-Key
+      in: header
+      schema:
+        type: string
+        maxLength: 128
+    signature:
+      name: X-Signature
+      in: header
+      schema:
+        type: string
+      description: Base64(HMAC-SHA256) of (method|path|query|timestamp|body-sha256).
+    timestamp:
+      name: X-Timestamp
+      in: header
+      schema:
+        type: string
+        format: date-time
+      description: RFC3339; reject if skew > 5 minutes.
+  responses:
+    LocaleHeaders:
+      description: Localized response headers
+      headers:
+        Content-Language:
+          schema:
+            type: string
+        X-Locale-Fallback:
+          schema:
+            type: boolean
+  schemas:
+    # ========================================================================
+    # Domain Prefixes (ID Generation)
+    # ========================================================================
+    # These enums define the canonical 2-letter uppercase domain codes
+    # used in globally unique ID generation across all services.
+    # Format: {DOMAIN_PREFIX}_{ULID}
+    # Example: EX_01HQZX3K8PQRS7VN6M9TW1ABJZ
+    #
+    # Single source of truth: changes here flow to all code generators
+    # See: id-generator.ts, id-validators.ts, handler-generator
+
+    DomainPrefix:
+      type: string
+      enum:
+        - "AU" # Auth - Sessions, refresh tokens, MFA
+        - "BI" # Business Intelligence - Dashboards, KPIs, metrics, analytics
+        - "BL" # Blockchain - Wallets, on-chain transactions, chain adapters
+        - "CO" # Compliance - KYC, accreditation, whitelists
+        - "CU" # Custodian - Custody accounts, deposits, withdrawals
+        - "ED" # Documents - Documents, e-signatures, publications
+        - "ES" # Escrow - Escrow accounts and operations
+        - "EV" # Events - Event schemas, subscriptions
+        - "EX" # Exchange - Markets, orders, trades, positions
+        - "FB" # Fees & Billing - Fee schedules, invoices, rebates
+        - "FI" # Fiat Banking - Bank accounts, fiat deposits/withdrawals
+        - "GO" # Governance - Votes, conversion events, buybacks
+        - "GW" # Gateway - Health checks, route configs
+        - "ID" # Identity - Accounts, users, roles, API keys
+        - "MO" # Market Oracles - Price ticks, valuations, disclosures
+        - "MP" # Marketplace - RFQs, listings, auctions
+        - "NO" # Notifications - Notifications, preferences, templates
+        - "OB" # Observability - Audit logs, system logs, metrics
+        - "PM" # Primary Market - Projects, offerings, token classes
+        - "PR" # Pricing RefData - Indices, reference prices, FX rates
+        - "RL" # Risk Limits - Risk limits, circuit breakers
+        - "SB" # Sandbox - Sandbox environments, test accounts
+        - "SE" # Settlements - Settlement instructions, netting
+        - "TA" # Transfer Agent - Certificates, registries, transfers
+        - "TR" # Treasury - Distributions, ledger entries, reconciliation
+        - "TT" # Tenancy Trust - Tenancy orgs, trust configs
+
+    # ========================================================================
+    # RESOURCE PREFIX MAPPINGS (See resource-prefixes.yaml)
+    # ========================================================================
+    # ResourcePrefixMappings imported from resource-prefixes.yaml for clean separation.
+    # This defines canonical resource→prefix mappings used by ID generators.
+    # Reference: resource-prefixes.yaml#/components/schemas/ResourcePrefixMappings
+    #
+    # Auto-generated into common.types.ts as: RESOURCE_PREFIX_MAPPINGS
+
+    ResponseMeta:
+      $ref: ./responses.yaml#/components/schemas/ResponseMeta
+    DataEnvelope:
+      $ref: ./responses.yaml#/components/schemas/DataEnvelope
+    PagedDataEnvelope:
+      $ref: ./responses.yaml#/components/schemas/PagedDataEnvelope
+    ErrorEnvelope:
+      $ref: ./responses.yaml#/components/schemas/ErrorEnvelope

@@ -1,0 +1,361 @@
+openapi: 3.1.0
+info:
+  title: Identity schemas (shared blueprint)
+  version: 0.1.0
+  description: |
+    Tenant API keys + operator users (sandbox CRUD) + optional auth stubs.
+    Not Nafath / UAE PASS. Not blox investor wallets, KYC, or sub-accounts.
+paths: {}
+components:
+  schemas:
+    ApiKeyId:
+      type: string
+      pattern: '^key_[0-9A-HJKMNP-TV-Z]{26}$'
+      description: Prefixed API key id (secret is never returned after create).
+
+    ApiKey:
+      type: object
+      required:
+        - keyId
+        - name
+        - createdAt
+        - status
+      properties:
+        keyId:
+          $ref: '#/components/schemas/ApiKeyId'
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+        prefix:
+          type: string
+          description: Non-secret prefix of the key for display (e.g. zzk_live_ab12).
+        status:
+          type: string
+          enum: [active, revoked]
+        scopes:
+          type: array
+          items:
+            type: string
+        createdAt:
+          type: string
+          format: date-time
+        lastUsedAt:
+          type: string
+          format: date-time
+        expiresAt:
+          type: string
+          format: date-time
+
+    ApiKeyCreateRequest:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+        scopes:
+          type: array
+          items:
+            type: string
+        expiresAt:
+          type: string
+          format: date-time
+
+    ApiKeyCreated:
+      allOf:
+        - $ref: '#/components/schemas/ApiKey'
+        - type: object
+          required:
+            - secret
+          properties:
+            secret:
+              type: string
+              description: Raw API key — shown once at creation. Store securely.
+
+    ApiKeyListData:
+      type: object
+      required:
+        - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ApiKey'
+
+    ApiKeyResponse:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          $ref: '#/components/schemas/ApiKey'
+        meta:
+          $ref: ./common/envelopes.yaml#/components/schemas/ResponseMeta
+
+    ApiKeyCreatedResponse:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          $ref: '#/components/schemas/ApiKeyCreated'
+        meta:
+          $ref: ./common/envelopes.yaml#/components/schemas/ResponseMeta
+
+    ApiKeyListResponse:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          $ref: '#/components/schemas/ApiKeyListData'
+        meta:
+          $ref: ./common/envelopes.yaml#/components/schemas/ResponseMeta
+
+    OperatorRole:
+      type: string
+      description: |
+        Soft RBAC for FI console demo honesty.
+        admin — Bank settings (profile, policy, keys, users);
+        analyst — Credit files review / packs;
+        ops — Needs fix and uploads;
+        viewer — read-only product surfaces.
+        Not hard-enforced on product APIs in v0.
+      enum: [admin, analyst, viewer, ops]
+
+    OperatorStatus:
+      type: string
+      enum: [active, disabled]
+
+    TenantUser:
+      type: object
+      description: FI operator principal for a tenant. Password hashes are never returned.
+      required:
+        - userId
+        - email
+        - displayName
+        - role
+        - status
+        - createdAt
+        - updatedAt
+      properties:
+        userId:
+          $ref: ./common/primitives.yaml#/components/schemas/UserId
+        email:
+          type: string
+          format: email
+        displayName:
+          type: string
+          minLength: 1
+          maxLength: 120
+        role:
+          $ref: '#/components/schemas/OperatorRole'
+        status:
+          $ref: '#/components/schemas/OperatorStatus'
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        lastLoginAt:
+          type: string
+          format: date-time
+        disabledAt:
+          type: string
+          format: date-time
+
+    CreateTenantUserRequest:
+      type: object
+      required:
+        - email
+        - displayName
+        - role
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+        displayName:
+          type: string
+          minLength: 1
+          maxLength: 120
+        role:
+          $ref: '#/components/schemas/OperatorRole'
+        password:
+          type: string
+          format: password
+          minLength: 8
+          description: Set once on create (sandbox). Never echoed back.
+
+    UpdateTenantUserRequest:
+      type: object
+      description: Email is immutable in v0. Optional password is an admin reset.
+      properties:
+        displayName:
+          type: string
+          minLength: 1
+          maxLength: 120
+        role:
+          $ref: '#/components/schemas/OperatorRole'
+        password:
+          type: string
+          format: password
+          minLength: 8
+
+    TenantUserListData:
+      type: object
+      required:
+        - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/TenantUser'
+
+    TenantUserResponse:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          $ref: '#/components/schemas/TenantUser'
+        meta:
+          $ref: ./common/envelopes.yaml#/components/schemas/ResponseMeta
+
+    TenantUserListResponse:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          $ref: '#/components/schemas/TenantUserListData'
+        meta:
+          $ref: ./common/envelopes.yaml#/components/schemas/ResponseMeta
+
+    OperatorLoginRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          format: password
+          minLength: 8
+      x-maturity: stub
+
+    AuthTokens:
+      type: object
+      required:
+        - accessToken
+        - refreshToken
+        - tokenType
+        - expiresIn
+        - operator
+      properties:
+        accessToken:
+          type: string
+        refreshToken:
+          type: string
+        tokenType:
+          type: string
+          enum: [Bearer]
+          default: Bearer
+        expiresIn:
+          type: integer
+          description: Access token lifetime in seconds.
+        operator:
+          $ref: '#/components/schemas/SessionOperator'
+          description: Signed-in FI operator for UI session (avatar / RBAC).
+      x-maturity: stub
+
+    SessionOperator:
+      type: object
+      description: |
+        Current operator summary for console chrome (not a full TenantUser).
+        UI: My profile / account dropdown.
+      required:
+        - userId
+        - email
+        - displayName
+        - role
+      properties:
+        userId:
+          $ref: ./common/primitives.yaml#/components/schemas/UserId
+        email:
+          type: string
+          format: email
+        displayName:
+          type: string
+          minLength: 1
+          maxLength: 120
+        role:
+          $ref: '#/components/schemas/OperatorRole'
+
+    SessionTenantSummary:
+      type: object
+      description: Bank (tenant) names for account chrome — read-only on My profile.
+      properties:
+        tenantId:
+          $ref: ./common/primitives.yaml#/components/schemas/TenantId
+        displayNameEn:
+          type: string
+        displayNameAr:
+          type: string
+
+    OperatorSession:
+      type: object
+      required:
+        - operator
+      properties:
+        operator:
+          $ref: '#/components/schemas/SessionOperator'
+        tenant:
+          $ref: '#/components/schemas/SessionTenantSummary'
+
+    OperatorSessionResponse:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          $ref: '#/components/schemas/OperatorSession'
+        meta:
+          $ref: ./common/envelopes.yaml#/components/schemas/ResponseMeta
+
+    UpdateOperatorMeRequest:
+      type: object
+      description: Self-service profile update. Email and role are immutable here.
+      required:
+        - displayName
+      properties:
+        displayName:
+          type: string
+          minLength: 1
+          maxLength: 120
+
+    AuthTokensResponse:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          $ref: '#/components/schemas/AuthTokens'
+        meta:
+          $ref: ./common/envelopes.yaml#/components/schemas/ResponseMeta
+
+    RefreshTokenRequest:
+      type: object
+      required:
+        - refreshToken
+      properties:
+        refreshToken:
+          type: string
+      x-maturity: stub

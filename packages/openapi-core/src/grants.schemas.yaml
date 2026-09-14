@@ -1,0 +1,149 @@
+openapi: 3.1.0
+info:
+  title: Grants schemas
+  version: 0.1.0
+  description: Density milestone grant programme schemas.
+paths: {}
+components:
+  schemas:
+    MilestoneMetric:
+      type: string
+      enum: [active_nodes, penetration_percent]
+
+    GrantProgrammeStatus:
+      type: string
+      enum: [draft, open, closed]
+
+    MilestoneStatus:
+      type: string
+      enum: [pending, achieved, disbursed, rejected]
+
+    GrantProgramme:
+      type: object
+      required: [id, name, milestoneMetric, rewardAmount, status, createdAt]
+      properties:
+        id:
+          $ref: ./common/primitives.yaml#/components/schemas/GrantProgrammeId
+        name:
+          type: string
+        milestoneMetric:
+          $ref: '#/components/schemas/MilestoneMetric'
+        milestoneThreshold:
+          type: number
+          format: double
+        rewardAmount:
+          type: number
+          format: double
+        status:
+          $ref: '#/components/schemas/GrantProgrammeStatus'
+        densityModelId:
+          $ref: ./common/primitives.yaml#/components/schemas/DensityModelId
+        createdAt:
+          type: string
+          format: date-time
+
+    GrantProgrammeCreate:
+      type: object
+      required: [name, milestoneMetric, rewardAmount]
+      properties:
+        name:
+          type: string
+        milestoneMetric:
+          $ref: '#/components/schemas/MilestoneMetric'
+        milestoneThreshold:
+          type: number
+          format: double
+        rewardAmount:
+          type: number
+          format: double
+        densityModelId:
+          $ref: ./common/primitives.yaml#/components/schemas/DensityModelId
+
+    Milestone:
+      type: object
+      required: [id, grantProgrammeId, status, measuredValue, createdAt]
+      properties:
+        id:
+          $ref: ./common/primitives.yaml#/components/schemas/MilestoneId
+        grantProgrammeId:
+          $ref: ./common/primitives.yaml#/components/schemas/GrantProgrammeId
+        appId:
+          $ref: ./common/primitives.yaml#/components/schemas/AppId
+        status:
+          $ref: '#/components/schemas/MilestoneStatus'
+        measuredValue:
+          type: number
+          format: double
+        reviewedAt:
+          type: string
+          format: date-time
+        disbursedAt:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+
+    MilestoneDisburse:
+      type: object
+      properties:
+        note:
+          type: string
+
+    GrantProgrammeListData:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/GrantProgramme'
+        nextCursor:
+          type: string
+
+    MilestoneListData:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Milestone'
+        nextCursor:
+          type: string
+
+    GrantProgrammeResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: '#/components/schemas/GrantProgramme'
+        meta:
+          $ref: ./common/envelopes.yaml#/components/schemas/ResponseMeta
+
+    GrantProgrammeListResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: '#/components/schemas/GrantProgrammeListData'
+        meta:
+          $ref: ./common/envelopes.yaml#/components/schemas/ResponseMeta
+
+    MilestoneResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: '#/components/schemas/Milestone'
+        meta:
+          $ref: ./common/envelopes.yaml#/components/schemas/ResponseMeta
+
+    MilestoneListResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: '#/components/schemas/MilestoneListData'
+        meta:
+          $ref: ./common/envelopes.yaml#/components/schemas/ResponseMeta

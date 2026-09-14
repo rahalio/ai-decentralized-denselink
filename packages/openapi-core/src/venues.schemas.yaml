@@ -1,0 +1,157 @@
+openapi: 3.1.0
+info:
+  title: Venues schemas
+  version: 0.1.0
+  description: Venue programmes and always-on campaign schemas.
+paths: {}
+components:
+  schemas:
+    VenueType:
+      type: string
+      enum: [stadium, school, mall]
+
+    VenueProgrammeStatus:
+      type: string
+      enum: [draft, enrolled, live, completed]
+
+    VenueProgramme:
+      type: object
+      required: [id, venueType, name, status, createdAt]
+      properties:
+        id:
+          $ref: ./common/primitives.yaml#/components/schemas/VenueProgrammeId
+        venueType:
+          $ref: '#/components/schemas/VenueType'
+        name:
+          type: string
+        city:
+          type: string
+        activeNodeTarget:
+          type: integer
+        status:
+          $ref: '#/components/schemas/VenueProgrammeStatus'
+        eventWindowStart:
+          type: string
+          format: date-time
+        eventWindowEnd:
+          type: string
+          format: date-time
+        activeNodes:
+          type: integer
+        sessionDurationMinutesAvg:
+          type: number
+          format: float
+        heatmapBins:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+
+    VenueProgrammeCreate:
+      type: object
+      required: [venueType, name]
+      properties:
+        venueType:
+          $ref: '#/components/schemas/VenueType'
+        name:
+          type: string
+        city:
+          type: string
+        activeNodeTarget:
+          type: integer
+        eventWindowStart:
+          type: string
+          format: date-time
+        eventWindowEnd:
+          type: string
+          format: date-time
+
+    AlwaysOnCampaign:
+      type: object
+      required: [id, name, enabled, createdAt]
+      properties:
+        id:
+          $ref: ./common/primitives.yaml#/components/schemas/AlwaysOnCampaignId
+        name:
+          type: string
+        venueProgrammeId:
+          $ref: ./common/primitives.yaml#/components/schemas/VenueProgrammeId
+        enabled:
+          type: boolean
+        inflateConsumerMetrics:
+          type: boolean
+          description: Must remain false — campaigns must not mislead consumer UX metrics.
+          default: false
+        createdAt:
+          type: string
+          format: date-time
+
+    AlwaysOnCampaignCreate:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+        venueProgrammeId:
+          $ref: ./common/primitives.yaml#/components/schemas/VenueProgrammeId
+        enabled:
+          type: boolean
+          default: true
+
+    VenueProgrammeListData:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/VenueProgramme'
+        nextCursor:
+          type: string
+
+    AlwaysOnCampaignListData:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/AlwaysOnCampaign'
+        nextCursor:
+          type: string
+
+    VenueProgrammeResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: '#/components/schemas/VenueProgramme'
+        meta:
+          $ref: ./common/envelopes.yaml#/components/schemas/ResponseMeta
+
+    VenueProgrammeListResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: '#/components/schemas/VenueProgrammeListData'
+        meta:
+          $ref: ./common/envelopes.yaml#/components/schemas/ResponseMeta
+
+    AlwaysOnCampaignResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: '#/components/schemas/AlwaysOnCampaign'
+        meta:
+          $ref: ./common/envelopes.yaml#/components/schemas/ResponseMeta
+
+    AlwaysOnCampaignListResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: '#/components/schemas/AlwaysOnCampaignListData'
+        meta:
+          $ref: ./common/envelopes.yaml#/components/schemas/ResponseMeta

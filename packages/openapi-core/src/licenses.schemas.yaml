@@ -1,0 +1,125 @@
+openapi: 3.1.0
+info:
+  title: Licenses schemas
+  version: 0.1.0
+  description: SDK license keys and encryption attestation schemas.
+paths: {}
+components:
+  schemas:
+    LicenseTier:
+      type: string
+      enum: [private_beta, public_beta, production]
+
+    LicenseStatus:
+      type: string
+      enum: [active, revoked]
+
+    AttestationStatus:
+      type: string
+      enum: [pending, passed, failed]
+
+    LicenseKey:
+      type: object
+      required: [id, appId, developerId, tier, status, createdAt]
+      properties:
+        id:
+          $ref: ./common/primitives.yaml#/components/schemas/LicenseId
+        appId:
+          $ref: ./common/primitives.yaml#/components/schemas/AppId
+        developerId:
+          $ref: ./common/primitives.yaml#/components/schemas/DeveloperId
+        tier:
+          $ref: '#/components/schemas/LicenseTier'
+        status:
+          $ref: '#/components/schemas/LicenseStatus'
+        meshPort:
+          type: integer
+        encryptionAttestation:
+          type: boolean
+          description: True when Signal-derived E2E attestation passed for bound build.
+        attestationStatus:
+          $ref: '#/components/schemas/AttestationStatus'
+        buildFingerprint:
+          type: string
+          description: Bound build hash / fingerprint.
+        createdAt:
+          type: string
+          format: date-time
+        revokedAt:
+          type: string
+          format: date-time
+
+    LicenseKeyCreate:
+      type: object
+      required: [appId, developerId]
+      properties:
+        appId:
+          $ref: ./common/primitives.yaml#/components/schemas/AppId
+        developerId:
+          $ref: ./common/primitives.yaml#/components/schemas/DeveloperId
+        tier:
+          $ref: '#/components/schemas/LicenseTier'
+          default: private_beta
+        meshPort:
+          type: integer
+
+    LicenseKeyCreated:
+      allOf:
+        - $ref: '#/components/schemas/LicenseKey'
+        - type: object
+          properties:
+            secret:
+              type: string
+              description: License secret returned once at issuance.
+
+    AttestationBind:
+      type: object
+      required: [buildFingerprint]
+      properties:
+        buildFingerprint:
+          type: string
+        encryptionProtocol:
+          type: string
+          description: e.g. signal-protocol
+          default: signal-protocol
+        passed:
+          type: boolean
+          default: true
+
+    LicenseKeyListData:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/LicenseKey'
+        nextCursor:
+          type: string
+
+    LicenseKeyResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: '#/components/schemas/LicenseKey'
+        meta:
+          $ref: ./common/envelopes.yaml#/components/schemas/ResponseMeta
+
+    LicenseKeyCreatedResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: '#/components/schemas/LicenseKeyCreated'
+        meta:
+          $ref: ./common/envelopes.yaml#/components/schemas/ResponseMeta
+
+    LicenseKeyListResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: '#/components/schemas/LicenseKeyListData'
+        meta:
+          $ref: ./common/envelopes.yaml#/components/schemas/ResponseMeta

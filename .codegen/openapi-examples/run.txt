@@ -1,0 +1,3 @@
+cd /Users/nrahal/@code/zero-zatca && PYTHONPATH=.codegen-zatca/codegen-merged/src python3 -m zero_codegen.cli.main generate --all --config .codegen-zatca/.zero-codegen-merged.json --verbose
+cd /Users/nrahal/@code/zero-zatca && PYTHONPATH=.codegen-zatca/codegen-merged/src python3 -m zero_codegen.cli.main generate --domain entity --layers core --config .codegen-zatca/.zero-codegen-merged.json --skip-build
+cd /Users/nrahal/@code/zero-zatca && PYTHONPATH=.codegen-zatca/codegen-merged/src python3 -m zero_codegen.cli.main bundle --all --config .codegen-zatca/.zero-codegen-merged.json

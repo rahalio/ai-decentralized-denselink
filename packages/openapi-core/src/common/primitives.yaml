@@ -1,0 +1,89 @@
+openapi: 3.1.0
+info:
+  title: Shared primitives
+  version: 0.1.0
+  description: Prefixed IDs and money types shared across domains.
+paths: {}
+components:
+  schemas:
+    TenantId:
+      type: string
+      description: Prefixed ULID-style tenant identifier.
+      pattern: '^tnt_[0-9A-Ha-hjkmnp-tv-z]{26}$'
+      example: tnt_01HZYXK8J0M0W5N6P7Q8R9S0T1U2
+    UserId:
+      type: string
+      description: Prefixed ULID-style tenant operator user identifier.
+      pattern: '^usr_[0-9A-Ha-hjkmnp-tv-z]{26}$'
+      example: usr_01HZYXK8J0M0W5N6P7Q8R9S0T1U2
+    Currency:
+      type: string
+      description: ISO 4217 currency code.
+      minLength: 3
+      maxLength: 3
+      pattern: '^[A-Z]{3}$'
+      example: USD
+    Money:
+      type: object
+      description: Decimal-string amount + currency (never IEEE float).
+      required:
+        - amount
+        - currency
+      properties:
+        amount:
+          type: string
+          description: Signed decimal string with up to 5 fractional digits.
+          pattern: '^-?\d+(\.\d{1,5})?$'
+          example: "1234.56"
+        currency:
+          $ref: '#/components/schemas/Currency'
+    JobStatus:
+      type: string
+      description: Generic async job lifecycle.
+      enum:
+        - queued
+        - running
+        - done
+        - failed
+    MeshPortId:
+      type: string
+      description: MeshPort allocation id (`mpt_…`).
+      pattern: '^mpt_[0-9A-Ha-hjkmnp-tv-z]{26}
+
+    LicenseId:
+      type: string
+      description: SDK license key id (`lic_…`).
+      pattern: '^lic_[0-9A-Ha-hjkmnp-tv-z]{26}$'
+    DensityModelId:
+      type: string
+      description: Density model scenario id (`den_…`).
+      pattern: '^den_[0-9A-Ha-hjkmnp-tv-z]{26}$'
+    VenueProgrammeId:
+      type: string
+      description: Venue programme id (`ven_…`).
+      pattern: '^ven_[0-9A-Ha-hjkmnp-tv-z]{26}$'
+    AlwaysOnCampaignId:
+      type: string
+      description: Always-on node campaign id (`aon_…`).
+      pattern: '^aon_[0-9A-Ha-hjkmnp-tv-z]{26}$'
+    GrantProgrammeId:
+      type: string
+      description: Grant programme id (`grt_…`).
+      pattern: '^grt_[0-9A-Ha-hjkmnp-tv-z]{26}$'
+    MilestoneId:
+      type: string
+      description: Grant milestone id (`msn_…`).
+      pattern: '^msn_[0-9A-Ha-hjkmnp-tv-z]{26}$'
+    TelemetryAggregateId:
+      type: string
+      description: Telemetry aggregate id (`tla_…`).
+      pattern: '^tla_[0-9A-Ha-hjkmnp-tv-z]{26}$'
+    AppId:
+      type: string
+      description: Registered mesh app id (`app_…`).
+      pattern: '^app_[0-9A-Ha-hjkmnp-tv-z]{26}$'
+    DeveloperId:
+      type: string
+      description: Developer account id (`dev_…`).
+      pattern: '^dev_[0-9A-Ha-hjkmnp-tv-z]{26}$'
+

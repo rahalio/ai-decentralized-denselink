@@ -1,0 +1,130 @@
+openapi: 3.1.0
+info:
+  title: Reports schemas
+  version: 0.1.0
+  description: Density, contribution, cohort, and sponsor ROI report schemas.
+paths: {}
+components:
+  schemas:
+    DensityReport:
+      type: object
+      required: [city, penetrationPercent, activeNodes]
+      properties:
+        city:
+          type: string
+        penetrationPercent:
+          type: number
+          format: float
+        activeNodes:
+          type: integer
+        piggybackApps:
+          type: array
+          items:
+            type: string
+        heatmapBins:
+          type: integer
+        gapBelowThreshold:
+          type: boolean
+
+    ContributionRankEntry:
+      type: object
+      required: [rank, appId, densityContributionScore]
+      properties:
+        rank:
+          type: integer
+        appId:
+          $ref: ./common/primitives.yaml#/components/schemas/AppId
+        sdkVersion:
+          type: string
+        meshPort:
+          type: integer
+        densityContributionScore:
+          type: number
+          format: float
+        activeNodes:
+          type: integer
+
+    BetaCohortSummary:
+      type: object
+      required: [cohortSize, privateBetaProjects, readyForPublicBeta]
+      properties:
+        cohortSize:
+          type: integer
+        privateBetaProjects:
+          type: integer
+          description: Target private-beta cohort size context (e.g. 80).
+        readyForPublicBeta:
+          type: boolean
+        averageDensityContribution:
+          type: number
+          format: float
+        collisionIncidents:
+          type: integer
+
+    SponsorRoiReport:
+      type: object
+      required: [venueProgrammeId, activeNodes, sessions]
+      properties:
+        venueProgrammeId:
+          $ref: ./common/primitives.yaml#/components/schemas/VenueProgrammeId
+        venueName:
+          type: string
+        activeNodes:
+          type: integer
+        sessions:
+          type: integer
+        avgSessionMinutes:
+          type: number
+          format: float
+        affordabilityBenchmarkNote:
+          type: string
+          description: Contextual 90% price-drop narrative — not a guaranteed SLA.
+        heatmapBins:
+          type: integer
+
+    ContributionRankListData:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ContributionRankEntry'
+        nextCursor:
+          type: string
+
+    DensityReportResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: '#/components/schemas/DensityReport'
+        meta:
+          $ref: ./common/envelopes.yaml#/components/schemas/ResponseMeta
+
+    ContributionRankListResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: '#/components/schemas/ContributionRankListData'
+        meta:
+          $ref: ./common/envelopes.yaml#/components/schemas/ResponseMeta
+
+    BetaCohortResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: '#/components/schemas/BetaCohortSummary'
+        meta:
+          $ref: ./common/envelopes.yaml#/components/schemas/ResponseMeta
+
+    SponsorRoiReportResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: '#/components/schemas/SponsorRoiReport'
+        meta:
+          $ref: ./common/envelopes.yaml#/components/schemas/ResponseMeta

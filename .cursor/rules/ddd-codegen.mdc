@@ -1,0 +1,18 @@
+---
+description: OpenAPI-first DDD codegen — core-only after YAML edits; full scaffold for new domains
+globs:
+  - packages/openapi-core/**/*
+  - packages/core/**/*
+  - platform/**/*
+  - .codegen/**/*
+alwaysApply: false
+---
+
+# DDD codegen (this repo)
+
+- **New domain:** full multi-layer generate once, then hand-fit platform.
+- **Existing domain YAML edit:** bundle → regenerate **`packages/core` only** → handwrite services/adapters/api-server.
+- Package scope: `@denselink/*`. Config: `.codegen/.zero-codegen-merged.json` (run `pnpm codegen:paths`).
+- Skills: `ddd-platform`, `ddd-codegen`, `ddd-identity`, `denselink-codegen-artifacts` under `.cursor/skills/`.
+- Do not regenerate adapters/services casually — sandbox + nested DI are hand-maintained after scaffold.
+- **Commit** the `.codegen/` toolchain + config. **Never** commit/push `packages/openapi-core/src/.bundled/`, Postman generated, or `__pycache__` (see `denselink-codegen-artifacts` skill).

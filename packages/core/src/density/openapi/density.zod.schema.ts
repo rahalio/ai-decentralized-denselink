@@ -1,0 +1,545 @@
+import { makeApi, Zodios, type ZodiosOptions } from '@zodios/core';
+import { z } from 'zod';
+
+const runDensityModel_Body = z
+  .object({
+    city: z.string(),
+    populationPerSqKm: z.number(),
+    targetPenetrationPercent: z.number().optional(),
+    nodeRangeMeters: z.number().int().gte(80).lte(100).optional().default(90),
+    venueFootprintSqKm: z.number().optional(),
+    benchmarkPreset: z
+      .enum(['dhaka', 'san_francisco', 'custom'])
+      .optional()
+      .default('custom'),
+  })
+  .passthrough();
+const Problem = z
+  .object({
+    type: z.string().url(),
+    title: z.string(),
+    status: z.number().int(),
+    detail: z.string(),
+    instance: z.string().url(),
+    code: z.string(),
+  })
+  .partial()
+  .passthrough();
+const DensityModelId = z.string();
+const DensityModelResult = z
+  .object({
+    id: z.string().regex(/^den_[0-9A-HJKMNP-TV-Z]{26}$/),
+    city: z.string(),
+    requiredPenetrationPercent: z.number(),
+    estimatedUsefulCoverage: z.boolean(),
+    gapBelowThreshold: z.boolean().optional(),
+    estimatedNodes: z.number().int().optional(),
+    benchmarkNote: z.string().optional(),
+    createdAt: z.string().datetime({ offset: true }),
+  })
+  .passthrough();
+const DensityModelListData = z
+  .object({
+    items: z.array(
+      z
+        .object({
+          id: z.string().regex(/^den_[0-9A-HJKMNP-TV-Z]{26}$/),
+          city: z.string(),
+          requiredPenetrationPercent: z.number(),
+          estimatedUsefulCoverage: z.boolean(),
+          gapBelowThreshold: z.boolean().optional(),
+          estimatedNodes: z.number().int().optional(),
+          benchmarkNote: z.string().optional(),
+          createdAt: z.string().datetime({ offset: true }),
+        })
+        .passthrough()
+    ),
+    nextCursor: z.string().optional(),
+  })
+  .passthrough();
+const ResponseMeta = z
+  .object({
+    requestId: z.string().uuid(),
+    correlationId: z.string(),
+    generatedAt: z.string().datetime({ offset: true }),
+  })
+  .partial()
+  .passthrough();
+const DensityModelListResponse = z
+  .object({
+    data: z
+      .object({
+        items: z.array(
+          z
+            .object({
+              id: z.string().regex(/^den_[0-9A-HJKMNP-TV-Z]{26}$/),
+              city: z.string(),
+              requiredPenetrationPercent: z.number(),
+              estimatedUsefulCoverage: z.boolean(),
+              gapBelowThreshold: z.boolean().optional(),
+              estimatedNodes: z.number().int().optional(),
+              benchmarkNote: z.string().optional(),
+              createdAt: z.string().datetime({ offset: true }),
+            })
+            .passthrough()
+        ),
+        nextCursor: z.string().optional(),
+      })
+      .passthrough(),
+    meta: z
+      .object({
+        requestId: z.string().uuid(),
+        correlationId: z.string(),
+        generatedAt: z.string().datetime({ offset: true }),
+      })
+      .partial()
+      .passthrough()
+      .optional(),
+  })
+  .passthrough();
+const DensityModelRequest = z
+  .object({
+    city: z.string(),
+    populationPerSqKm: z.number(),
+    targetPenetrationPercent: z.number().optional(),
+    nodeRangeMeters: z.number().int().gte(80).lte(100).optional().default(90),
+    venueFootprintSqKm: z.number().optional(),
+    benchmarkPreset: z
+      .enum(['dhaka', 'san_francisco', 'custom'])
+      .optional()
+      .default('custom'),
+  })
+  .passthrough();
+const DensityModelResponse = z
+  .object({
+    data: z
+      .object({
+        id: z.string().regex(/^den_[0-9A-HJKMNP-TV-Z]{26}$/),
+        city: z.string(),
+        requiredPenetrationPercent: z.number(),
+        estimatedUsefulCoverage: z.boolean(),
+        gapBelowThreshold: z.boolean().optional(),
+        estimatedNodes: z.number().int().optional(),
+        benchmarkNote: z.string().optional(),
+        createdAt: z.string().datetime({ offset: true }),
+      })
+      .passthrough(),
+    meta: z
+      .object({
+        requestId: z.string().uuid(),
+        correlationId: z.string(),
+        generatedAt: z.string().datetime({ offset: true }),
+      })
+      .partial()
+      .passthrough()
+      .optional(),
+  })
+  .passthrough();
+const AppId = z.string();
+const PiggybackRegion = z
+  .object({
+    region: z.string(),
+    contributorApps: z.array(
+      z
+        .object({
+          appId: z.string().regex(/^app_[0-9A-HJKMNP-TV-Z]{26}$/),
+          densityRank: z.number().int(),
+          activeNodes: z.number().int(),
+          alwaysOnCampaign: z.boolean().optional(),
+        })
+        .passthrough()
+    ),
+    launchReadinessScore: z.number().gte(0).lte(100),
+    suggestedVenueTypes: z
+      .array(z.enum(['stadium', 'school', 'mall']))
+      .optional(),
+    greenfield: z.boolean().optional(),
+  })
+  .passthrough();
+const PiggybackListData = z
+  .object({
+    items: z.array(
+      z
+        .object({
+          region: z.string(),
+          contributorApps: z.array(
+            z
+              .object({
+                appId: z.string().regex(/^app_[0-9A-HJKMNP-TV-Z]{26}$/),
+                densityRank: z.number().int(),
+                activeNodes: z.number().int(),
+                alwaysOnCampaign: z.boolean().optional(),
+              })
+              .passthrough()
+          ),
+          launchReadinessScore: z.number().gte(0).lte(100),
+          suggestedVenueTypes: z
+            .array(z.enum(['stadium', 'school', 'mall']))
+            .optional(),
+          greenfield: z.boolean().optional(),
+        })
+        .passthrough()
+    ),
+    nextCursor: z.string().optional(),
+  })
+  .passthrough();
+const PiggybackListResponse = z
+  .object({
+    data: z
+      .object({
+        items: z.array(
+          z
+            .object({
+              region: z.string(),
+              contributorApps: z.array(
+                z
+                  .object({
+                    appId: z.string().regex(/^app_[0-9A-HJKMNP-TV-Z]{26}$/),
+                    densityRank: z.number().int(),
+                    activeNodes: z.number().int(),
+                    alwaysOnCampaign: z.boolean().optional(),
+                  })
+                  .passthrough()
+              ),
+              launchReadinessScore: z.number().gte(0).lte(100),
+              suggestedVenueTypes: z
+                .array(z.enum(['stadium', 'school', 'mall']))
+                .optional(),
+              greenfield: z.boolean().optional(),
+            })
+            .passthrough()
+        ),
+        nextCursor: z.string().optional(),
+      })
+      .passthrough(),
+    meta: z
+      .object({
+        requestId: z.string().uuid(),
+        correlationId: z.string(),
+        generatedAt: z.string().datetime({ offset: true }),
+      })
+      .partial()
+      .passthrough()
+      .optional(),
+  })
+  .passthrough();
+
+export const schemas: any = {
+  runDensityModel_Body,
+  Problem,
+  DensityModelId,
+  DensityModelResult,
+  DensityModelListData,
+  ResponseMeta,
+  DensityModelListResponse,
+  DensityModelRequest,
+  DensityModelResponse,
+  AppId,
+  PiggybackRegion,
+  PiggybackListData,
+  PiggybackListResponse,
+};
+
+const endpoints = makeApi([
+  {
+    method: 'get',
+    path: '/v1/density-models',
+    alias: 'listDensityModels',
+    requestFormat: 'json',
+    parameters: [
+      {
+        name: 'cursor',
+        type: 'Query',
+        schema: z.string().optional(),
+      },
+      {
+        name: 'limit',
+        type: 'Query',
+        schema: z.number().int().gte(1).lte(100).optional().default(25),
+      },
+    ],
+    response: z
+      .object({
+        data: z
+          .object({
+            items: z.array(
+              z
+                .object({
+                  id: z.string().regex(/^den_[0-9A-HJKMNP-TV-Z]{26}$/),
+                  city: z.string(),
+                  requiredPenetrationPercent: z.number(),
+                  estimatedUsefulCoverage: z.boolean(),
+                  gapBelowThreshold: z.boolean().optional(),
+                  estimatedNodes: z.number().int().optional(),
+                  benchmarkNote: z.string().optional(),
+                  createdAt: z.string().datetime({ offset: true }),
+                })
+                .passthrough()
+            ),
+            nextCursor: z.string().optional(),
+          })
+          .passthrough(),
+        meta: z
+          .object({
+            requestId: z.string().uuid(),
+            correlationId: z.string(),
+            generatedAt: z.string().datetime({ offset: true }),
+          })
+          .partial()
+          .passthrough()
+          .optional(),
+      })
+      .passthrough(),
+    errors: [
+      {
+        status: 401,
+        description: `Missing or invalid API key`,
+        schema: z
+          .object({
+            type: z.string().url(),
+            title: z.string(),
+            status: z.number().int(),
+            detail: z.string(),
+            instance: z.string().url(),
+            code: z.string(),
+          })
+          .partial()
+          .passthrough(),
+      },
+    ],
+  },
+  {
+    method: 'post',
+    path: '/v1/density-models',
+    alias: 'runDensityModel',
+    requestFormat: 'json',
+    parameters: [
+      {
+        name: 'body',
+        type: 'Body',
+        schema: runDensityModel_Body,
+      },
+      {
+        name: 'Idempotency-Key',
+        type: 'Header',
+        schema: z.string().min(1).max(128),
+      },
+    ],
+    response: z
+      .object({
+        data: z
+          .object({
+            id: z.string().regex(/^den_[0-9A-HJKMNP-TV-Z]{26}$/),
+            city: z.string(),
+            requiredPenetrationPercent: z.number(),
+            estimatedUsefulCoverage: z.boolean(),
+            gapBelowThreshold: z.boolean().optional(),
+            estimatedNodes: z.number().int().optional(),
+            benchmarkNote: z.string().optional(),
+            createdAt: z.string().datetime({ offset: true }),
+          })
+          .passthrough(),
+        meta: z
+          .object({
+            requestId: z.string().uuid(),
+            correlationId: z.string(),
+            generatedAt: z.string().datetime({ offset: true }),
+          })
+          .partial()
+          .passthrough()
+          .optional(),
+      })
+      .passthrough(),
+    errors: [
+      {
+        status: 400,
+        description: `Malformed request`,
+        schema: z
+          .object({
+            type: z.string().url(),
+            title: z.string(),
+            status: z.number().int(),
+            detail: z.string(),
+            instance: z.string().url(),
+            code: z.string(),
+          })
+          .partial()
+          .passthrough(),
+      },
+      {
+        status: 401,
+        description: `Missing or invalid API key`,
+        schema: z
+          .object({
+            type: z.string().url(),
+            title: z.string(),
+            status: z.number().int(),
+            detail: z.string(),
+            instance: z.string().url(),
+            code: z.string(),
+          })
+          .partial()
+          .passthrough(),
+      },
+    ],
+  },
+  {
+    method: 'get',
+    path: '/v1/density-models/:densityModelId',
+    alias: 'getDensityModel',
+    requestFormat: 'json',
+    parameters: [
+      {
+        name: 'densityModelId',
+        type: 'Path',
+        schema: z.string().regex(/^den_[0-9A-HJKMNP-TV-Z]{26}$/),
+      },
+    ],
+    response: z
+      .object({
+        data: z
+          .object({
+            id: z.string().regex(/^den_[0-9A-HJKMNP-TV-Z]{26}$/),
+            city: z.string(),
+            requiredPenetrationPercent: z.number(),
+            estimatedUsefulCoverage: z.boolean(),
+            gapBelowThreshold: z.boolean().optional(),
+            estimatedNodes: z.number().int().optional(),
+            benchmarkNote: z.string().optional(),
+            createdAt: z.string().datetime({ offset: true }),
+          })
+          .passthrough(),
+        meta: z
+          .object({
+            requestId: z.string().uuid(),
+            correlationId: z.string(),
+            generatedAt: z.string().datetime({ offset: true }),
+          })
+          .partial()
+          .passthrough()
+          .optional(),
+      })
+      .passthrough(),
+    errors: [
+      {
+        status: 401,
+        description: `Missing or invalid API key`,
+        schema: z
+          .object({
+            type: z.string().url(),
+            title: z.string(),
+            status: z.number().int(),
+            detail: z.string(),
+            instance: z.string().url(),
+            code: z.string(),
+          })
+          .partial()
+          .passthrough(),
+      },
+      {
+        status: 404,
+        description: `Resource not found`,
+        schema: z
+          .object({
+            type: z.string().url(),
+            title: z.string(),
+            status: z.number().int(),
+            detail: z.string(),
+            instance: z.string().url(),
+            code: z.string(),
+          })
+          .partial()
+          .passthrough(),
+      },
+    ],
+  },
+  {
+    method: 'get',
+    path: '/v1/piggyback',
+    alias: 'listPiggybackRegions',
+    requestFormat: 'json',
+    parameters: [
+      {
+        name: 'cursor',
+        type: 'Query',
+        schema: z.string().optional(),
+      },
+      {
+        name: 'limit',
+        type: 'Query',
+        schema: z.number().int().gte(1).lte(100).optional().default(25),
+      },
+      {
+        name: 'region',
+        type: 'Query',
+        schema: z.string().optional(),
+      },
+    ],
+    response: z
+      .object({
+        data: z
+          .object({
+            items: z.array(
+              z
+                .object({
+                  region: z.string(),
+                  contributorApps: z.array(
+                    z
+                      .object({
+                        appId: z.string().regex(/^app_[0-9A-HJKMNP-TV-Z]{26}$/),
+                        densityRank: z.number().int(),
+                        activeNodes: z.number().int(),
+                        alwaysOnCampaign: z.boolean().optional(),
+                      })
+                      .passthrough()
+                  ),
+                  launchReadinessScore: z.number().gte(0).lte(100),
+                  suggestedVenueTypes: z
+                    .array(z.enum(['stadium', 'school', 'mall']))
+                    .optional(),
+                  greenfield: z.boolean().optional(),
+                })
+                .passthrough()
+            ),
+            nextCursor: z.string().optional(),
+          })
+          .passthrough(),
+        meta: z
+          .object({
+            requestId: z.string().uuid(),
+            correlationId: z.string(),
+            generatedAt: z.string().datetime({ offset: true }),
+          })
+          .partial()
+          .passthrough()
+          .optional(),
+      })
+      .passthrough(),
+    errors: [
+      {
+        status: 401,
+        description: `Missing or invalid API key`,
+        schema: z
+          .object({
+            type: z.string().url(),
+            title: z.string(),
+            status: z.number().int(),
+            detail: z.string(),
+            instance: z.string().url(),
+            code: z.string(),
+          })
+          .partial()
+          .passthrough(),
+      },
+    ],
+  },
+]);
+
+export const api: any = new Zodios(
+  'https://api.ddd-codegen-starter.local/v1',
+  endpoints
+);
+
+export function createApiClient(baseUrl: string, options?: ZodiosOptions): any {
+  return new Zodios(baseUrl, endpoints, options);
+}
