@@ -1,0 +1,447 @@
+openapi: 3.0.3
+info:
+  title: Denselink
+  version: 0.1.0
+  description: >-
+    Mesh developer density console for MeshPort allocation, license keys, venue
+    analytics, incentive grants, and coverage modelling.
+  x-product-slug: ai-decentralized-denselink
+  x-source: ai-in-decentralized+ai/RightMesh_WP5/
+servers:
+  - url: https://api.example.com
+tags:
+  - name: MeshPorts
+    description: MeshPort allocation and collision prevention
+  - name: Licenses
+    description: SDK license keys and build attestation
+  - name: DensityModels
+    description: City and venue penetration modelling
+  - name: Grants
+    description: Density milestone grants and staking incentives
+  - name: Venues
+    description: Stadium, school, and mall wedge programmes
+  - name: Reporting
+    description: Developer contribution and coverage exports
+paths:
+  /v1/meshports:
+    get:
+      operationId: listMeshPorts
+      tags: [MeshPorts]
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Cursor"
+        - name: appId
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: MeshPorts page
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ListEnvelopeMeshPort"
+    post:
+      operationId: allocateMeshPort
+      tags: [MeshPorts]
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MeshPortAllocate"
+      responses:
+        "201":
+          description: MeshPort allocated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DataEnvelopeMeshPort"
+        "409":
+          description: Port collision
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+  /v1/licenses:
+    get:
+      operationId: listLicenseKeys
+      tags: [Licenses]
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Cursor"
+      responses:
+        "200":
+          description: License keys page
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ListEnvelopeLicenseKey"
+    post:
+      operationId: issueLicenseKey
+      tags: [Licenses]
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LicenseKeyCreate"
+      responses:
+        "201":
+          description: License issued
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DataEnvelopeLicenseKey"
+  /v1/licenses/{licenseId}/revoke:
+    parameters:
+      - name: licenseId
+        in: path
+        required: true
+        schema:
+          type: string
+    post:
+      operationId: revokeLicenseKey
+      tags: [Licenses]
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: License revoked
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DataEnvelopeLicenseKey"
+  /v1/density-models:
+    post:
+      operationId: runDensityModel
+      tags: [DensityModels]
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DensityModelRequest"
+      responses:
+        "200":
+          description: Model output
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DataEnvelopeDensityModelResult"
+  /v1/grants:
+    get:
+      operationId: listGrantProgrammes
+      tags: [Grants]
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Cursor"
+      responses:
+        "200":
+          description: Grant programmes
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ListEnvelopeGrantProgramme"
+    post:
+      operationId: createGrantProgramme
+      tags: [Grants]
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GrantProgrammeCreate"
+      responses:
+        "201":
+          description: Grant programme created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DataEnvelopeGrantProgramme"
+  /v1/venues:
+    get:
+      operationId: listVenueProgrammes
+      tags: [Venues]
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: venueType
+          in: query
+          schema:
+            type: string
+            enum: [stadium, school, mall]
+      responses:
+        "200":
+          description: Venue programmes
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ListEnvelopeVenueProgramme"
+    post:
+      operationId: createVenueProgramme
+      tags: [Venues]
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VenueProgrammeCreate"
+      responses:
+        "201":
+          description: Venue programme created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DataEnvelopeVenueProgramme"
+  /v1/telemetry/aggregates:
+    post:
+      operationId: ingestNodeTelemetry
+      tags: [Venues]
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NodeTelemetryAggregate"
+      responses:
+        "202":
+          description: Telemetry accepted
+  /v1/reports/density:
+    get:
+      operationId: getDensityReport
+      tags: [Reporting]
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: city
+          in: query
+          schema:
+            type: string
+        - name: appId
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Density and heatmap summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DataEnvelopeDensityReport"
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  parameters:
+    Cursor:
+      name: cursor
+      in: query
+      schema:
+        type: string
+  schemas:
+    ResponseMeta:
+      type: object
+      required: [requestId, timestamp]
+      properties:
+        requestId: { type: string }
+        timestamp: { type: string, format: date-time }
+    Problem:
+      type: object
+      required: [type, title, status]
+      properties:
+        type: { type: string, format: uri }
+        title: { type: string }
+        status: { type: integer }
+        detail: { type: string }
+    MeshPort:
+      type: object
+      required: [port, appId, status]
+      properties:
+        port: { type: integer }
+        appId: { type: string }
+        status: { type: string, enum: [allocated, revoked] }
+    MeshPortAllocate:
+      type: object
+      required: [appId]
+      properties:
+        appId: { type: string }
+        preferredPort: { type: integer }
+    LicenseKey:
+      type: object
+      required: [id, appId, tier, status]
+      properties:
+        id: { type: string }
+        appId: { type: string }
+        tier: { type: string, enum: [private_beta, public_beta, production] }
+        status: { type: string, enum: [active, revoked] }
+        meshPort: { type: integer }
+        encryptionAttestation: { type: boolean }
+    LicenseKeyCreate:
+      type: object
+      required: [appId, developerId]
+      properties:
+        appId: { type: string }
+        developerId: { type: string }
+        tier: { type: string }
+    DensityModelRequest:
+      type: object
+      required: [city, populationPerSqKm]
+      properties:
+        city: { type: string }
+        populationPerSqKm: { type: number, format: double }
+        targetPenetrationPercent: { type: number, format: float }
+        nodeRangeMeters: { type: integer, default: 90 }
+    DensityModelResult:
+      type: object
+      properties:
+        city: { type: string }
+        requiredPenetrationPercent: { type: number, format: float }
+        estimatedUsefulCoverage: { type: boolean }
+        benchmarkNote: { type: string }
+    GrantProgramme:
+      type: object
+      properties:
+        id: { type: string }
+        name: { type: string }
+        milestoneMetric: { type: string, enum: [active_nodes, penetration_percent] }
+        rewardAmount: { type: number, format: double }
+    GrantProgrammeCreate:
+      type: object
+      required: [name, milestoneMetric, rewardAmount]
+      properties:
+        name: { type: string }
+        milestoneMetric: { type: string }
+        rewardAmount: { type: number, format: double }
+    VenueProgramme:
+      type: object
+      properties:
+        id: { type: string }
+        venueType: { type: string, enum: [stadium, school, mall] }
+        name: { type: string }
+        activeNodeTarget: { type: integer }
+    VenueProgrammeCreate:
+      type: object
+      required: [venueType, name]
+      properties:
+        venueType: { type: string }
+        name: { type: string }
+        activeNodeTarget: { type: integer }
+    NodeTelemetryAggregate:
+      type: object
+      required: [appId, licenseId, activeNodes, capturedAt]
+      properties:
+        appId: { type: string }
+        licenseId: { type: string }
+        activeNodes: { type: integer }
+        geoBin: { type: string }
+        capturedAt: { type: string, format: date-time }
+    DensityReport:
+      type: object
+      properties:
+        city: { type: string }
+        penetrationPercent: { type: number, format: float }
+        activeNodes: { type: integer }
+        piggybackApps: { type: array, items: { type: string } }
+        heatmapBins: { type: integer }
+    DataEnvelopeMeshPort:
+      type: object
+      required: [data, meta]
+      properties:
+        data: { $ref: "#/components/schemas/MeshPort" }
+        meta: { $ref: "#/components/schemas/ResponseMeta" }
+    DataEnvelopeLicenseKey:
+      type: object
+      required: [data, meta]
+      properties:
+        data: { $ref: "#/components/schemas/LicenseKey" }
+        meta: { $ref: "#/components/schemas/ResponseMeta" }
+    DataEnvelopeDensityModelResult:
+      type: object
+      required: [data, meta]
+      properties:
+        data: { $ref: "#/components/schemas/DensityModelResult" }
+        meta: { $ref: "#/components/schemas/ResponseMeta" }
+    DataEnvelopeGrantProgramme:
+      type: object
+      required: [data, meta]
+      properties:
+        data: { $ref: "#/components/schemas/GrantProgramme" }
+        meta: { $ref: "#/components/schemas/ResponseMeta" }
+    DataEnvelopeVenueProgramme:
+      type: object
+      required: [data, meta]
+      properties:
+        data: { $ref: "#/components/schemas/VenueProgramme" }
+        meta: { $ref: "#/components/schemas/ResponseMeta" }
+    DataEnvelopeDensityReport:
+      type: object
+      required: [data, meta]
+      properties:
+        data: { $ref: "#/components/schemas/DensityReport" }
+        meta: { $ref: "#/components/schemas/ResponseMeta" }
+    ListEnvelopeMeshPort:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          type: object
+          required: [items]
+          properties:
+            items: { type: array, items: { $ref: "#/components/schemas/MeshPort" } }
+            nextCursor: { type: string }
+        meta: { $ref: "#/components/schemas/ResponseMeta" }
+    ListEnvelopeLicenseKey:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          type: object
+          required: [items]
+          properties:
+            items: { type: array, items: { $ref: "#/components/schemas/LicenseKey" } }
+            nextCursor: { type: string }
+        meta: { $ref: "#/components/schemas/ResponseMeta" }
+    ListEnvelopeGrantProgramme:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          type: object
+          required: [items]
+          properties:
+            items: { type: array, items: { $ref: "#/components/schemas/GrantProgramme" } }
+            nextCursor: { type: string }
+        meta: { $ref: "#/components/schemas/ResponseMeta" }
+    ListEnvelopeVenueProgramme:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          type: object
+          required: [items]
+          properties:
+            items: { type: array, items: { $ref: "#/components/schemas/VenueProgramme" } }
+            nextCursor: { type: string }
+        meta: { $ref: "#/components/schemas/ResponseMeta" }
