@@ -14,3 +14,10 @@ coverage/
 *.pem
 .venv/
 __pycache__/
+
+# Codegen — do not push
+.codegen/
+codegen/
+**/zero_codegen/
+**/integration-events/generated/
+platform/tests/postman/generated/
